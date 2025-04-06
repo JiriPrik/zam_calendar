@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Moje žádosti{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-list me-2"></i>Moje žádosti o volno</h4>
+    </div>
+    <div class="card-body">
+        {% if leave_requests %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Typ volna</th>
+                            <th>Od</th>
+                            <th>Do</th>
+                            <th>Počet dní</th>
+                            <th>Stav</th>
+                            <th>Komentář</th>
+                            <th>Vytvořeno</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in leave_requests %}
+                            <tr>
+                                <td>
+                                    <span class="badge" style="background-color: {{ request.leave_type.color_code }}">
+                                        {{ request.leave_type.name }}
+                                    </span>
+                                </td>
+                                <td>{{ request.start_date.strftime('%d.%m.%Y') }}</td>
+                                <td>{{ request.end_date.strftime('%d.%m.%Y') }}</td>
+                                <td>{{ request.duration_days() }}</td>
+                                <td>
+                                    {% if request.status == 'pending' %}
+                                        <span class="badge bg-warning">Čeká na schválení</span>
+                                    {% elif request.status == 'approved' %}
+                                        <span class="badge bg-success">Schváleno</span>
+                                    {% elif request.status == 'rejected' %}
+                                        <span class="badge bg-danger">Zamítnuto</span>
+                                    {% elif request.status == 'cancelled' %}
+                                        <span class="badge bg-secondary">Zrušeno</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if request.manager_comment %}
+                                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="{{ request.manager_comment }}">
+                                            <i class="fas fa-comment"></i>
+                                        </button>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ request.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                                <td>
+                                    {% if request.status == 'pending' %}
+                                        <a href="{{ url_for('leave.cancel_request', request_id=request.id) }}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-times me-1"></i>Zrušit
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>Nemáte žádné žádosti o volno.
+            </div>
+        {% endif %}
+
+        <div class="mt-3">
+            <a href="{{ url_for('leave.request_leave') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-1"></i>Nová žádost o volno
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Inicializace tooltipů pro zobrazení komentářů
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
+{% endblock %}

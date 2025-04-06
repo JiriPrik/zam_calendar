@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Upravit typ volna{% else %}Přidat typ volna{% endif %}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css">
+<style>
+    .color-picker-wrapper {
+        display: flex;
+        align-items: center;
+    }
+    .color-preview {
+        width: 30px;
+        height: 30px;
+        border-radius: 4px;
+        margin-left: 10px;
+        border: 1px solid #ced4da;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-list-alt me-2"></i>
+                    {% if is_edit %}Upravit typ volna{% else %}Přidat nový typ volna{% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{% if is_edit %}{{ url_for('leave_type.edit_leave_type', leave_type_id=leave_type.id) }}{% else %}{{ url_for('leave_type.add_leave_type') }}{% endif %}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
+                        {% for error in form.name.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows=3) }}
+                        {% for error in form.description.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.color_code.label(class="form-label") }}
+                        <div class="color-picker-wrapper">
+                            {{ form.color_code(class="form-control") }}
+                            <div class="color-preview" id="color-preview" style="background-color: {{ form.color_code.data or '#3498db' }}"></div>
+                        </div>
+                        {% for error in form.color_code.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.auto_approve(class="form-check-input") }}
+                        {{ form.auto_approve.label(class="form-check-label") }}
+                        <div class="form-text">Zaškrtněte, pokud chcete, aby žádosti o tento typ volna byly automaticky schvalovány</div>
+                    </div>
+                    <div class="mb-3" id="max-days-container">
+                        {{ form.max_days.label(class="form-label") }}
+                        {{ form.max_days(class="form-control") }}
+                        {% for error in form.max_days.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                        <div class="form-text">Zadejte maximální počet dní, pro které bude žádost automaticky schválena. Zadejte 0 pro neomezený počet dní.</div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('leave_type.list_leave_types') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>Zrušit
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aktualizace náhledu barvy při změně hodnoty
+        const colorInput = document.getElementById('color_code');
+        const colorPreview = document.getElementById('color-preview');
+        
+        colorInput.addEventListener('input', function() {
+            colorPreview.style.backgroundColor = this.value;
+        });
+        
+        // Zobrazení/skrytí pole pro maximální počet dní podle stavu automatického schvalování
+        const autoApproveCheckbox = document.getElementById('auto_approve');
+        const maxDaysContainer = document.getElementById('max-days-container');
+        
+        function updateMaxDaysVisibility() {
+            if (autoApproveCheckbox.checked) {
+                maxDaysContainer.style.display = 'block';
+            } else {
+                maxDaysContainer.style.display = 'none';
+            }
+        }
+        
+        autoApproveCheckbox.addEventListener('change', updateMaxDaysVisibility);
+        updateMaxDaysVisibility(); // Inicializace při načtení stránky
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - Systém pro správu dovolených</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <style>
+        /* Základní barevná schémata */
+        :root {
+            /* Výchozí schéma - Bootstrap */
+            --bs-primary: #0d6efd;
+            --bs-primary-rgb: 13, 110, 253;
+            --bs-secondary: #6c757d;
+            --bs-success: #198754;
+            --bs-info: #0dcaf0;
+            --bs-warning: #ffc107;
+            --bs-danger: #dc3545;
+            --bs-light: #f8f9fa;
+            --bs-dark: #212529;
+            --theme-color: var(--bs-primary);
+            --theme-color-rgb: var(--bs-primary-rgb);
+        }
+
+        /* Vlastní barevná schémata */
+
+        /* Burgundy schéma */
+        body[data-bs-theme-color="burgundy"] {
+            --bs-primary: #471435;
+            --bs-primary-rgb: 71, 20, 53;
+            --theme-color: #471435;
+            --theme-color-rgb: 71, 20, 53;
+        }
+
+        /* Cream schéma */
+        body[data-bs-theme-color="cream"] {
+            --bs-primary: #FFF7D9;
+            --bs-primary-rgb: 255, 247, 217;
+            --theme-color: #e6c35c; /* Tmavší odstín pro lepší kontrast */
+            --theme-color-rgb: 230, 195, 92;
+        }
+
+        /* Mint schéma */
+        body[data-bs-theme-color="mint"] {
+            --bs-primary: #D1F2D7;
+            --bs-primary-rgb: 209, 242, 215;
+            --theme-color: #4caf50; /* Tmavší odstín pro lepší kontrast */
+            --theme-color-rgb: 76, 175, 80;
+        }
+
+        /* Teal schéma */
+        body[data-bs-theme-color="teal"] {
+            --bs-primary: #9AE0DB;
+            --bs-primary-rgb: 154, 224, 219;
+            --theme-color: #009688; /* Tmavší odstín pro lepší kontrast */
+            --theme-color-rgb: 0, 150, 136;
+        }
+
+        /* Sky schéma */
+        body[data-bs-theme-color="sky"] {
+            --bs-primary: #5AC2E6;
+            --bs-primary-rgb: 90, 194, 230;
+            --theme-color: #0288d1; /* Tmavší odstín pro lepší kontrast */
+            --theme-color-rgb: 2, 136, 209;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        /* Tmavý režim */
+        [data-bs-theme="dark"] {
+            --bs-body-color: #dee2e6;
+            --bs-body-bg: #212529;
+            --bs-body-color-rgb: 222, 226, 230;
+            --bs-body-bg-rgb: 33, 37, 41;
+            color-scheme: dark;
+        }
+
+        [data-bs-theme="dark"] .navbar {
+            --bs-navbar-color: rgba(255, 255, 255, 0.75);
+            --bs-navbar-hover-color: rgba(255, 255, 255, 0.9);
+            --bs-navbar-active-color: #fff;
+        }
+
+        [data-bs-theme="dark"] .card {
+            --bs-card-bg: #2c3034;
+            --bs-card-border-color: #373b3e;
+        }
+
+        [data-bs-theme="dark"] .modal {
+            --bs-modal-bg: #2c3034;
+            --bs-modal-border-color: #373b3e;
+        }
+
+        [data-bs-theme="dark"] .form-control {
+            background-color: #2c3034;
+            border-color: #373b3e;
+            color: #dee2e6;
+        }
+
+        [data-bs-theme="dark"] .form-control:focus {
+            background-color: #2c3034;
+            border-color: #0d6efd;
+            color: #dee2e6;
+        }
+
+        [data-bs-theme="dark"] .form-select {
+            background-color: #2c3034;
+            border-color: #373b3e;
+            color: #dee2e6;
+        }
+
+        [data-bs-theme="dark"] .form-select:focus {
+            background-color: #2c3034;
+            border-color: #0d6efd;
+            color: #dee2e6;
+        }
+
+        [data-bs-theme="dark"] .form-check-input {
+            background-color: #2c3034;
+            border-color: #373b3e;
+        }
+
+        [data-bs-theme="dark"] .form-check-input:checked {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        [data-bs-theme="dark"] .table {
+            --bs-table-color: #dee2e6;
+            --bs-table-bg: #2c3034;
+            --bs-table-border-color: #373b3e;
+        }
+
+        [data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+            --bs-table-accent-bg: rgba(255, 255, 255, 0.05);
+            color: #dee2e6;
+        }
+
+        [data-bs-theme="dark"] .dropdown-menu {
+            --bs-dropdown-bg: #2c3034;
+            --bs-dropdown-border-color: #373b3e;
+            --bs-dropdown-link-color: #dee2e6;
+            --bs-dropdown-link-hover-color: #fff;
+            --bs-dropdown-link-hover-bg: #0d6efd;
+            --bs-dropdown-link-active-color: #fff;
+            --bs-dropdown-link-active-bg: #0d6efd;
+            --bs-dropdown-link-disabled-color: #adb5bd;
+            --bs-dropdown-header-color: #adb5bd;
+        }
+
+        /* Vlastní styly */
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: var(--theme-color) !important;
+            transition: background-color 0.3s ease;
+        }
+
+        .navbar-brand {
+            font-weight: 500;
+        }
+
+        .card {
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .btn {
+            border-radius: 0.25rem;
+            padding: 0.375rem 0.75rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: var(--bs-primary);
+            border-color: var(--bs-primary);
+        }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+
+        .form-control, .form-select {
+            border-radius: 0.25rem;
+            padding: 0.375rem 0.75rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .table {
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .table th {
+            font-weight: 500;
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+            border-radius: 0.25rem;
+        }
+
+        .alert {
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer {
+            padding: 1.5rem 0;
+            margin-top: 2rem;
+        }
+
+        /* Kalendář */
+        .fc-event {
+            cursor: pointer;
+        }
+
+        .holiday-name {
+            font-size: 0.8em;
+            color: #333333;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* Přepínač tmavého režimu */
+        .dark-mode-toggle {
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .dark-mode-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-bs-theme="dark"] .dark-mode-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Barevné vzorky */
+        .color-swatch {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 8px;
+            vertical-align: middle;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .color-scheme-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .color-scheme-item.active {
+            background-color: rgba(var(--bs-primary-rgb), 0.1);
+            font-weight: 500;
+        }
+
+        /* Animace */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    {% block styles %}{% endblock %}
+</head>
+<body data-bs-theme-color="burgundy">
+    <!-- Navigace -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <i class="fas fa-calendar-alt me-2"></i>Systém pro správu dovolených
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.index') }}">
+                                <i class="fas fa-home me-1"></i>Domů
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.calendar') }}">
+                                <i class="fas fa-calendar me-1"></i>Kalendář
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('leave.request_leave') }}">
+                                <i class="fas fa-plus-circle me-1"></i>Žádost o volno
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('leave.my_requests') }}">
+                                <i class="fas fa-list me-1"></i>Moje žádosti
+                            </a>
+                        </li>
+
+                        {% if current_user.is_manager() %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-cog me-1"></i>Správa
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdownAdmin">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('leave.pending_approvals') }}">
+                                            <i class="fas fa-check-circle me-1"></i>Ke schválení
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('user.list_users') }}">
+                                            <i class="fas fa-users me-1"></i>Správa uživatelů
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('report.index') }}">
+                                            <i class="fas fa-chart-bar me-1"></i>Reporty
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('holiday.list_holidays') }}">
+                                            <i class="fas fa-calendar-alt me-1"></i>Svátky
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('leave_type.list_leave_types') }}">
+                                            <i class="fas fa-list-alt me-1"></i>Typy volna
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+
+                <ul class="navbar-nav ms-auto">
+                    <!-- Výběr barevného schématu -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="colorSchemeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-palette me-1"></i>Motiv
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="colorSchemeDropdown">
+                            <li><h6 class="dropdown-header">Barevné schéma</h6></li>
+                            <li>
+                                <a class="dropdown-item color-scheme-item" href="#" data-color-scheme="default">
+                                    <span class="color-swatch" style="background-color: #0d6efd;"></span> Výchozí
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item color-scheme-item" href="#" data-color-scheme="burgundy">
+                                    <span class="color-swatch" style="background-color: #471435;"></span> Burgundy
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item color-scheme-item" href="#" data-color-scheme="cream">
+                                    <span class="color-swatch" style="background-color: #e6c35c;"></span> Cream
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item color-scheme-item" href="#" data-color-scheme="mint">
+                                    <span class="color-swatch" style="background-color: #4caf50;"></span> Mint
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item color-scheme-item" href="#" data-color-scheme="teal">
+                                    <span class="color-swatch" style="background-color: #009688;"></span> Teal
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item color-scheme-item" href="#" data-color-scheme="sky">
+                                    <span class="color-swatch" style="background-color: #0288d1;"></span> Sky
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Režim</h6></li>
+                            <li>
+                                <a class="dropdown-item" href="#" id="darkModeToggle">
+                                    <i class="fas fa-moon me-2"></i>Tmavý režim
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user me-1"></i>{{ current_user.first_name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
+                                <li>
+                                    <div class="dropdown-header">
+                                        <strong>{{ current_user.first_name }} {{ current_user.last_name }}</strong>
+                                        <div class="small text-muted">{{ current_user.email }}</div>
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('main.profile') }}">
+                                        <i class="fas fa-id-card me-1"></i>Můj profil
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('auth.change_password') }}">
+                                        <i class="fas fa-key me-1"></i>Změnit heslo
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                        <i class="fas fa-sign-out-alt me-1"></i>Odhlásit se
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Přihlásit se
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hlavní obsah -->
+    <main class="py-4">
+        <div class="container">
+            <!-- Notifikace -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% set alert_class = "alert-info" %}
+                        {% if category == "success" %}
+                            {% set alert_class = "alert-success" %}
+                        {% elif category == "danger" or category == "error" %}
+                            {% set alert_class = "alert-danger" %}
+                        {% elif category == "warning" %}
+                            {% set alert_class = "alert-warning" %}
+                        {% endif %}
+
+                        <div class="alert {{ alert_class }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Obsah stránky -->
+            <div class="fade-in">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Patička -->
+    <footer class="footer bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">&copy; {{ now.year }} Systém pro správu dovolených</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="mb-0">Verze 1.0</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Vlastní skripty -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializace tooltipů
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Inicializace popoverů
+            var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl);
+            });
+
+            // Barevná schémata a tmavý režim
+            var darkModeToggle = document.getElementById('darkModeToggle');
+            var colorSchemeItems = document.querySelectorAll('.color-scheme-item');
+            var html = document.documentElement;
+
+            // Kontrola, zda je v localStorage uloženo nastavení tmavého režimu
+            if (localStorage.getItem('darkMode') === 'true') {
+                html.setAttribute('data-bs-theme', 'dark');
+                if (darkModeToggle) {
+                    darkModeToggle.querySelector('i').classList.remove('fa-moon');
+                    darkModeToggle.querySelector('i').classList.add('fa-sun');
+                }
+            }
+
+            // Kontrola, zda je v localStorage uloženo nastavení barevného schématu
+            var savedColorScheme = localStorage.getItem('colorScheme') || 'burgundy';
+            if (savedColorScheme !== 'default') {
+                document.body.setAttribute('data-bs-theme-color', savedColorScheme);
+            }
+
+            // Označení aktivního barevného schématu
+            colorSchemeItems.forEach(function(item) {
+                if (item.getAttribute('data-color-scheme') === savedColorScheme) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Přepínání barevného schématu
+            colorSchemeItems.forEach(function(item) {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    var colorScheme = this.getAttribute('data-color-scheme');
+
+                    // Odstranění aktivního stavu ze všech položek
+                    colorSchemeItems.forEach(function(item) {
+                        item.classList.remove('active');
+                    });
+
+                    // Přidání aktivního stavu k vybrané položce
+                    this.classList.add('active');
+
+                    // Nastavení barevného schématu
+                    if (colorScheme === 'default') {
+                        document.body.removeAttribute('data-bs-theme-color');
+                        localStorage.removeItem('colorScheme');
+                    } else {
+                        document.body.setAttribute('data-bs-theme-color', colorScheme);
+                        localStorage.setItem('colorScheme', colorScheme);
+                    }
+                });
+            });
+
+            // Přepínání tmavého režimu
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    if (html.getAttribute('data-bs-theme') === 'dark') {
+                        html.removeAttribute('data-bs-theme');
+                        localStorage.setItem('darkMode', 'false');
+                        darkModeToggle.querySelector('i').classList.remove('fa-sun');
+                        darkModeToggle.querySelector('i').classList.add('fa-moon');
+                    } else {
+                        html.setAttribute('data-bs-theme', 'dark');
+                        localStorage.setItem('darkMode', 'true');
+                        darkModeToggle.querySelector('i').classList.remove('fa-moon');
+                        darkModeToggle.querySelector('i').classList.add('fa-sun');
+                    }
+                });
+            }
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

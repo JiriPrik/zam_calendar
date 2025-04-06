@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Typy volna{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-list-alt me-2"></i>Typy volna</h4>
+    </div>
+    <div class="card-body">
+        <div class="mb-4">
+            <a href="{{ url_for('leave_type.add_leave_type') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-1"></i>Přidat nový typ volna
+            </a>
+        </div>
+        
+        {% if leave_types %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Název</th>
+                            <th>Popis</th>
+                            <th>Barva</th>
+                            <th>Automatické schvalování</th>
+                            <th>Max. dní pro auto. schválení</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave_type in leave_types %}
+                            <tr>
+                                <td>{{ leave_type.name }}</td>
+                                <td>{{ leave_type.description or '-' }}</td>
+                                <td>
+                                    <span class="badge" style="background-color: {{ leave_type.color_code }}">
+                                        {{ leave_type.color_code }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if leave_type.auto_approve %}
+                                        <span class="badge bg-success">Ano</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Ne</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if leave_type.auto_approve %}
+                                        {% if leave_type.max_days == 0 %}
+                                            <span class="badge bg-info">Neomezeno</span>
+                                        {% else %}
+                                            {{ leave_type.max_days }} dní
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('leave_type.edit_leave_type', leave_type_id=leave_type.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit me-1"></i>Upravit
+                                    </a>
+                                    <a href="{{ url_for('leave_type.delete_leave_type', leave_type_id=leave_type.id) }}" class="btn btn-sm btn-danger" 
+                                       onclick="return confirm('Opravdu chcete smazat tento typ volna? Tuto akci nelze vrátit.')">
+                                        <i class="fas fa-trash me-1"></i>Smazat
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>Žádné typy volna k zobrazení.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

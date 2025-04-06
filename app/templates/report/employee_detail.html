@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Detail zaměstnance{% endblock %}
+
+{% block styles %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 30px;
+    }
+    .leave-type-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 4px;
+        color: white;
+        margin-right: 5px;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 4px;
+        margin-right: 5px;
+    }
+    .status-approved { background-color: #28a745; }
+    .status-pending { background-color: #ffc107; color: #212529; }
+    .status-rejected { background-color: #dc3545; }
+    .status-cancelled { background-color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-user me-2"></i>Detail zaměstnance - {{ employee.first_name }} {{ employee.last_name }}</h4>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Základní informace</h5>
+                <table class="table table-sm">
+                    <tr>
+                        <th>Jméno:</th>
+                        <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Uživatelské jméno:</th>
+                        <td>{{ employee.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ employee.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Role:</th>
+                        <td>{{ employee.role.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Nadřízený:</th>
+                        <td>
+                            {% if employee.manager %}
+                                {{ employee.manager.first_name }} {{ employee.manager.last_name }}
+                            {% else %}
+                                <span class="text-muted">Není přiřazen</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h5>Informace o dovolené</h5>
+                <table class="table table-sm">
+                    <tr>
+                        <th>Nečerpaná dovolená z minulého roku:</th>
+                        <td>{{ employee.previous_year_leave }} dní</td>
+                    </tr>
+                    <tr>
+                        <th>Nárok na dovolenou v aktuálním roce:</th>
+                        <td>{{ employee.current_year_leave }} dní</td>
+                    </tr>
+                    <tr>
+                        <th>Celkem k dispozici:</th>
+                        <td>{{ employee.previous_year_leave + employee.current_year_leave }} dní</td>
+                    </tr>
+                    <tr>
+                        <th>Zbývající dovolená:</th>
+                        <td>{{ employee.get_remaining_leave() }} dní</td>
+                    </tr>
+                    <tr>
+                        <th>Využití dovolené:</th>
+                        <td>
+                            {% set total_leave = employee.previous_year_leave + employee.current_year_leave %}
+                            {% set used_leave = total_leave - employee.get_remaining_leave() %}
+                            {% set percentage = (used_leave / total_leave * 100) if total_leave > 0 else 0 %}
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ percentage }}%;"
+                                     aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ percentage|round }}%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <h5 class="mb-3">Čerpání volna podle typu</h5>
+        <div class="row mb-4">
+            {% for type_name, stats in leave_by_type.items() %}
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header" style="background-color: {{ stats.color }}; color: white;">
+                            {{ type_name }}
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1"><strong>Schváleno:</strong> {{ stats.approved }} dní</p>
+                            <p class="mb-1"><strong>Čeká na schválení:</strong> {{ stats.pending }} dní</p>
+                            <p class="mb-1"><strong>Zamítnuto:</strong> {{ stats.rejected }} dní</p>
+                            <p class="mb-1"><strong>Zrušeno:</strong> {{ stats.cancelled }} dní</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <h5 class="mb-3">Čerpání volna podle měsíců</h5>
+        <div class="chart-container">
+            <canvas id="leaveByMonthChart"></canvas>
+        </div>
+
+        <h5 class="mb-3">Seznam žádostí o volno v roce {{ current_year }}</h5>
+        {% if leave_requests %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Typ volna</th>
+                            <th>Od</th>
+                            <th>Do</th>
+                            <th>Počet dní</th>
+                            <th>Stav</th>
+                            <th>Důvod</th>
+                            <th>Komentář</th>
+                            <th>Vytvořeno</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in leave_requests %}
+                            <tr>
+                                <td>
+                                    <span class="leave-type-badge" style="background-color: {{ request.leave_type.color_code }}">
+                                        {{ request.leave_type.name }}
+                                    </span>
+                                </td>
+                                <td>{{ request.start_date.strftime('%d.%m.%Y') }}</td>
+                                <td>{{ request.end_date.strftime('%d.%m.%Y') }}</td>
+                                <td>{{ request.duration_days() }}</td>
+                                <td>
+                                    {% if request.status == 'pending' %}
+                                        <span class="status-badge status-pending">Čeká na schválení</span>
+                                    {% elif request.status == 'approved' %}
+                                        <span class="status-badge status-approved">Schváleno</span>
+                                    {% elif request.status == 'rejected' %}
+                                        <span class="status-badge status-rejected">Zamítnuto</span>
+                                    {% elif request.status == 'cancelled' %}
+                                        <span class="status-badge status-cancelled">Zrušeno</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if request.reason %}
+                                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="{{ request.reason }}">
+                                            <i class="fas fa-comment"></i>
+                                        </button>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if request.manager_comment %}
+                                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="{{ request.manager_comment }}">
+                                            <i class="fas fa-comment-dots"></i>
+                                        </button>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ request.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>Žádné žádosti o volno v tomto roce.
+            </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{{ url_for('report.leave_summary') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Zpět na shrnutí
+            </a>
+            <a href="{{ url_for('user.edit_user', user_id=employee.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i>Upravit údaje zaměstnance
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializace tooltipů
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Graf čerpání volna podle měsíců
+        var ctx = document.getElementById('leaveByMonthChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ months|tojson }},
+                datasets: [{
+                    label: 'Počet dní volna',
+                    data: {{ leave_by_month|tojson }},
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Počet dní volna'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Měsíc'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Čerpání volna podle měsíců v roce {{ current_year }}'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Schválení žádosti{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-check-circle me-2"></i>Schválení žádosti o volno</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Informace o žádosti</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Zaměstnanec:</th>
+                                <td>{{ leave_request.employee.first_name }} {{ leave_request.employee.last_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Typ volna:</th>
+                                <td>
+                                    <span class="badge" style="background-color: {{ leave_request.leave_type.color_code }}">
+                                        {{ leave_request.leave_type.name }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Od:</th>
+                                <td>{{ leave_request.start_date.strftime('%d.%m.%Y') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Do:</th>
+                                <td>{{ leave_request.end_date.strftime('%d.%m.%Y') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Počet dní:</th>
+                                <td>{{ leave_request.duration_days() }}</td>
+                            </tr>
+                            <tr>
+                                <th>Půldenní volno:</th>
+                                <td>{{ 'Ano' if leave_request.half_day else 'Ne' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Vytvořeno:</th>
+                                <td>{{ leave_request.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Důvod žádosti</h5>
+                        <div class="p-3 bg-light rounded">
+                            {% if leave_request.reason %}
+                                {{ leave_request.reason }}
+                            {% else %}
+                                <em>Důvod nebyl uveden</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('leave.approve_request', request_id=leave_request.id) }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.status.label(class="form-label") }}
+                        {{ form.status(class="form-select") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.comment.label(class="form-label") }}
+                        {{ form.comment(class="form-control", rows=3) }}
+                        <div class="form-text">Uveďte komentář k vašemu rozhodnutí (nepovinné).</div>
+                    </div>
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="text-center">
+            <a href="{{ url_for('leave.pending_approvals') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Zpět na seznam žádostí
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

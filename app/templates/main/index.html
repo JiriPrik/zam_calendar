@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Přehled{% endblock %}
+
+{% block content %}
+<!-- Ovládací panel pro dashboard -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h4 mb-0"><i class="fas fa-tachometer-alt me-2"></i>Můj dashboard</h2>
+    <a href="{{ url_for('dashboard.settings') }}" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-cogs me-1"></i>Přizpůsobit dashboard
+    </a>
+</div>
+
+<!-- Přizpůsobitelný dashboard -->
+<div class="row mb-4">
+    {% if dashboard_widgets %}
+        {% for widget_data in dashboard_widgets %}
+            {% set widget = widget_data.widget %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="{{ widget.icon }} me-2"></i>{{ widget.name }}</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if widget.name == 'Přehled volna' %}
+                            <!-- Widget pro přehled volna -->
+                            <h6 class="card-subtitle mb-3 text-muted">{{ current_month }}/{{ current_year }}</h6>
+                            {% if leave_requests %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Zaměstnanec</th>
+                                                <th>Typ</th>
+                                                <th>Od</th>
+                                                <th>Do</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for request in leave_requests[:5] %}
+                                                <tr>
+                                                    <td>{{ request.employee.first_name }} {{ request.employee.last_name }}</td>
+                                                    <td>
+                                                        <span class="badge" style="background-color: {{ request.leave_type.color_code }}">
+                                                            {{ request.leave_type.name }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ request.start_date.strftime('%d.%m.') }}</td>
+                                                    <td>{{ request.end_date.strftime('%d.%m.') }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% if leave_requests|length > 5 %}
+                                    <div class="text-center mt-2">
+                                        <a href="{{ url_for('main.calendar') }}" class="btn btn-sm btn-outline-primary">Zobrazit vše</a>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>Žádné žádosti o volno pro tento měsíc.
+                                </div>
+                            {% endif %}
+                            <div class="mt-3">
+                                <a href="{{ url_for('leave.request_leave') }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-plus-circle me-1"></i>Nová žádost
+                                </a>
+                            </div>
+                        {% elif widget.name == 'Moje žádosti' %}
+                            <!-- Widget pro moje žádosti -->
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="p-3 border rounded bg-light">
+                                        <h3 class="text-warning">{{ pending_requests_count }}</h3>
+                                        <p class="mb-0">Ke schválení</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 border rounded bg-light">
+                                        <h3 class="text-success">{{ approved_requests_count }}</h3>
+                                        <p class="mb-0">Schváleno</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{{ url_for('leave.my_requests') }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-list me-1"></i>Zobrazit všechny žádosti
+                                </a>
+                            </div>
+                        {% elif widget.name == 'Ke schválení' and current_user.is_manager() %}
+                            <!-- Widget pro žádosti ke schválení (pouze pro manažery) -->
+                            <div class="text-center p-3">
+                                <h3 class="{% if pending_approvals_count > 0 %}text-warning{% else %}text-success{% endif %}">{{ pending_approvals_count }}</h3>
+                                <p class="mb-0">Žádostí čeká na vaše schválení</p>
+                            </div>
+                            {% if pending_approvals_count > 0 %}
+                                <div class="d-grid gap-2 mt-3">
+                                    <a href="{{ url_for('leave.pending_approvals') }}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-check-circle me-1"></i>Schválit žádosti
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% elif widget.name == 'Rychlé odkazy' %}
+                            <!-- Widget pro rychlé odkazy -->
+                            <div class="list-group">
+                                <a href="{{ url_for('main.calendar') }}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-calendar me-2"></i>Kalendář
+                                </a>
+                                <a href="{{ url_for('leave.request_leave') }}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-plus-circle me-2"></i>Nová žádost o volno
+                                </a>
+                                <a href="{{ url_for('leave.my_requests') }}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-list me-2"></i>Moje žádosti
+                                </a>
+                                <a href="{{ url_for('main.profile') }}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-user me-2"></i>Můj profil
+                                </a>
+                                {% if current_user.is_manager() %}
+                                    <a href="{{ url_for('user.list_users') }}" class="list-group-item list-group-item-action">
+                                        <i class="fas fa-users me-2"></i>Správa uživatelů
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <!-- Výchozí obsah pro ostatní widgety -->
+                            <p class="card-text">{{ widget.description }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>Nemáte nastaven žádný widget. <a href="{{ url_for('dashboard.settings') }}">Přizpůsobte si svůj dashboard</a>.
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Přehled volna (pokud není zobrazen jako widget) -->
+{% if not dashboard_widgets or not dashboard_widgets|selectattr('widget.name', 'equalto', 'Přehled volna')|list %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Přehled volna - {{ current_month }}/{{ current_year }}</h4>
+            </div>
+            <div class="card-body">
+                {% if leave_requests %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Zaměstnanec</th>
+                                    <th>Typ volna</th>
+                                    <th>Od</th>
+                                    <th>Do</th>
+                                    <th>Počet dní</th>
+                                    <th>Stav</th>
+                                    <th>Akce</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in leave_requests %}
+                                    <tr>
+                                        <td>{{ request.employee.first_name }} {{ request.employee.last_name }}</td>
+                                        <td>
+                                            <span class="badge" style="background-color: {{ request.leave_type.color_code }}">
+                                                {{ request.leave_type.name }}
+                                            </span>
+                                        </td>
+                                        <td>{{ request.start_date.strftime('%d.%m.%Y') }}</td>
+                                        <td>{{ request.end_date.strftime('%d.%m.%Y') }}</td>
+                                        <td>{{ request.duration_days() }}</td>
+                                        <td>
+                                            {% if request.status == 'pending' %}
+                                                <span class="badge bg-warning">Čeká na schválení</span>
+                                            {% elif request.status == 'approved' %}
+                                                <span class="badge bg-success">Schváleno</span>
+                                            {% elif request.status == 'rejected' %}
+                                                <span class="badge bg-danger">Zamítnuto</span>
+                                            {% elif request.status == 'cancelled' %}
+                                                <span class="badge bg-secondary">Zrušeno</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if current_user.is_manager() and request.status == 'pending' and request.manager_id == current_user.id %}
+                                                <a href="{{ url_for('leave.approve_request', request_id=request.id) }}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-check me-1"></i>Schválit
+                                                </a>
+                                            {% elif request.user_id == current_user.id and request.status == 'pending' %}
+                                                <a href="{{ url_for('leave.cancel_request', request_id=request.id) }}" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-times me-1"></i>Zrušit
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Žádné žádosti o volno pro tento měsíc.
+                    </div>
+                {% endif %}
+
+                <div class="mt-3">
+                    <a href="{{ url_for('leave.request_leave') }}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-1"></i>Nová žádost o volno
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

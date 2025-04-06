@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Kalendář{% endblock %}
+
+{% block styles %}
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
+<style>
+    #calendar {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .fc-event {
+        cursor: pointer;
+    }
+
+    .holiday-name {
+        font-size: 0.8em;
+        color: #333333;
+        padding: 2px 0;
+        text-align: center;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+
+    .fc-daygrid-day-bottom {
+        padding: 2px;
+        text-align: center;
+    }
+
+    .holiday-event {
+        opacity: 0.7;
+    }
+
+    .fc-event-title {
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-calendar me-2"></i>Kalendář volna</h4>
+    </div>
+    <div class="card-body">
+        <div id="calendar"></div>
+    </div>
+</div>
+
+<!-- Modal pro zobrazení detailů volna -->
+<div class="modal fade" id="leaveModal" tabindex="-1" aria-labelledby="leaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="leaveModalLabel"><i class="fas fa-calendar-day me-2"></i>Detail volna</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th style="width: 40%">Zaměstnanec:</th>
+                            <td id="modal-employee"></td>
+                        </tr>
+                        <tr>
+                            <th>Typ volna:</th>
+                            <td id="modal-type"></td>
+                        </tr>
+                        <tr>
+                            <th>Od:</th>
+                            <td id="modal-start"></td>
+                        </tr>
+                        <tr>
+                            <th>Do:</th>
+                            <td id="modal-end"></td>
+                        </tr>
+                        <tr>
+                            <th>Stav:</th>
+                            <td id="modal-status"></td>
+                        </tr>
+                        <tr>
+                            <th>Důvod:</th>
+                            <td id="modal-reason"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zavřít</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales/cs.js'></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+
+        // Zpracování svátků z JSON
+        var holidaysData = {{ holidays|safe }};
+        var holidayEvents = [];
+
+        // Svátky budou přidány pomocí funkce dayCellDidMount
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'cs',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listMonth'
+            },
+            events: function(info, successCallback, failureCallback) {
+                var events = [];
+
+                // Přidání žádostí o volno
+                {% for request in leave_requests %}
+                events.push({
+                    id: '{{ request.id }}',
+                    title: '{{ request.employee.first_name }} {{ request.employee.last_name }} - {{ request.leave_type.name }}',
+                    start: '{{ request.start_date.strftime("%Y-%m-%d") }}',
+                    end: '{{ request.end_date.strftime("%Y-%m-%d") }}',
+                    color: '{% if request.status == "pending" %}#6c757d{% else %}{{ request.leave_type.color_code }}{% endif %}',
+                    extendedProps: {
+                        employee: '{{ request.employee.first_name }} {{ request.employee.last_name }}',
+                        type: '{{ request.leave_type.name }}',
+                        status: '{{ request.status }}',
+                        reason: '{{ request.reason|default("Neuvedeno", true) }}'
+                    },
+                    {% if request.status == 'pending' %}
+                        borderColor: '#ffc107',
+                        textColor: '#fff',
+                    {% elif request.status == 'cancelled' %}
+                        textDecoration: 'line-through',
+                        opacity: 0.6,
+                    {% endif %}
+                });
+                {% endfor %}
+
+                // Svátky jsou přidány pomocí funkce dayCellDidMount
+
+                successCallback(events);
+            },
+            // Funkce pro podbarvení nepracovních dnů a přidání názvu svátku
+            dayCellDidMount: function(info) {
+                // Podbarvení víkendů
+                if (info.date.getDay() === 0 || info.date.getDay() === 6) { // 0 = neděle, 6 = sobota
+                    info.el.style.backgroundColor = '#F0F0F2'; // Světle šedá
+                }
+
+                // Kontrola, zda je datum svátek
+                // Použijeme lokální datum bez časového pásma
+                var month = (info.date.getMonth() + 1).toString().padStart(2, '0'); // Měsíce jsou indexovány od 0
+                var day = info.date.getDate().toString().padStart(2, '0');
+
+                for (var i = 0; i < holidaysData.length; i++) {
+                    // Získání měsíce a dne ze svátku
+                    var holidayDate = holidaysData[i].date.split('-');
+                    var holidayMonth = holidayDate[1];
+                    var holidayDay = holidayDate[2];
+
+                    // Porovnání pouze měsíce a dne
+                    if (holidayMonth === month && holidayDay === day) {
+                        // Podbarvení buňky
+                        info.el.style.backgroundColor = '#F0F0F2'; // Světle šedá
+
+                        // Přidání názvu svátku do buňky
+                        var holidayElement = document.createElement('div');
+                        holidayElement.className = 'holiday-name';
+                        holidayElement.textContent = holidaysData[i].name;
+
+                        // Přidání elementu na konec buňky
+                        var cellContent = info.el.querySelector('.fc-daygrid-day-bottom');
+                        if (!cellContent) {
+                            cellContent = document.createElement('div');
+                            cellContent.className = 'fc-daygrid-day-bottom';
+                            info.el.appendChild(cellContent);
+                        }
+                        cellContent.appendChild(holidayElement);
+                        break;
+                    }
+                }
+            },
+            eventClick: function(info) {
+                // Pokud je to svátek, nezobrazujeme modální okno
+                if (info.event.extendedProps.isHoliday) {
+                    return;
+                }
+
+                // Zobrazení modálního okna s detaily
+                document.getElementById('modal-employee').textContent = info.event.extendedProps.employee;
+                document.getElementById('modal-type').textContent = info.event.extendedProps.type;
+                document.getElementById('modal-start').textContent = new Date(info.event.start).toLocaleDateString('cs-CZ');
+                document.getElementById('modal-end').textContent = new Date(info.event.end || info.event.start).toLocaleDateString('cs-CZ');
+
+                // Nastavení stavu
+                var statusText = '';
+                var statusClass = '';
+                switch(info.event.extendedProps.status) {
+                    case 'pending':
+                        statusText = 'Čeká na schválení';
+                        statusClass = 'badge bg-warning text-dark';
+                        break;
+                    case 'approved':
+                        statusText = 'Schváleno';
+                        statusClass = 'badge bg-success';
+                        break;
+                    case 'rejected':
+                        statusText = 'Zamítnuto';
+                        statusClass = 'badge bg-danger';
+                        break;
+                    case 'cancelled':
+                        statusText = 'Zrušeno';
+                        statusClass = 'badge bg-secondary';
+                        break;
+                }
+                document.getElementById('modal-status').innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>';
+                document.getElementById('modal-reason').textContent = info.event.extendedProps.reason;
+
+                // Zobrazení modálního okna
+                var leaveModal = new bootstrap.Modal(document.getElementById('leaveModal'));
+                leaveModal.show();
+            }
+        });
+        calendar.render();
+    });
+</script>
+{% endblock %}

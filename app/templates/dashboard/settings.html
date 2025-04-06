@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Nastavení dashboardu{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-cogs me-2"></i>Nastavení dashboardu</h4>
+    </div>
+    <div class="card-body">
+        <p class="lead">Přizpůsobte si svůj dashboard podle vašich potřeb. Můžete si vybrat, které widgety chcete zobrazit a v jakém pořadí.</p>
+        
+        <form method="POST" action="{{ url_for('dashboard.settings') }}">
+            <div class="row">
+                {% for widget in available_widgets %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="{{ widget.icon }} me-2"></i>{{ widget.name }}
+                                </h5>
+                                <div class="form-check form-switch">
+                                    {% set is_visible = user_settings_dict[widget.id].is_visible if widget.id in user_settings_dict else True %}
+                                    <input class="form-check-input" type="checkbox" id="widget-visible-{{ widget.id }}" 
+                                           {% if is_visible %}checked{% endif %}>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">{{ widget.description }}</p>
+                                
+                                <div class="mb-3">
+                                    <label for="widget-position-{{ widget.id }}" class="form-label">Pozice</label>
+                                    {% set position = user_settings_dict[widget.id].position if widget.id in user_settings_dict else widget.position %}
+                                    <input type="number" class="form-control" id="widget-position-{{ widget.id }}" 
+                                           value="{{ position }}" min="0">
+                                </div>
+                                
+                                <input type="hidden" name="widget_settings" 
+                                       id="widget-settings-{{ widget.id }}" 
+                                       value="{{ widget.id }}|{{ is_visible }}|{{ position }}">
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary me-md-2">Zrušit</a>
+                <button type="submit" class="btn btn-primary">Uložit nastavení</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aktualizace skrytých polí při změně nastavení
+        const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="widget-visible-"]');
+        const positions = document.querySelectorAll('input[type="number"][id^="widget-position-"]');
+        
+        function updateHiddenField(widgetId) {
+            const checkbox = document.getElementById(`widget-visible-${widgetId}`);
+            const position = document.getElementById(`widget-position-${widgetId}`);
+            const hiddenField = document.getElementById(`widget-settings-${widgetId}`);
+            
+            hiddenField.value = `${widgetId}|${checkbox.checked}|${position.value}`;
+        }
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const widgetId = this.id.replace('widget-visible-', '');
+                updateHiddenField(widgetId);
+            });
+        });
+        
+        positions.forEach(position => {
+            position.addEventListener('change', function() {
+                const widgetId = this.id.replace('widget-position-', '');
+                updateHiddenField(widgetId);
+            });
+        });
+    });
+</script>
+{% endblock %}

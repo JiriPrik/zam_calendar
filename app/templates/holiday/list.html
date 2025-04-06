@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Svátky a nepracovní dny{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Svátky a nepracovní dny</h4>
+    </div>
+    <div class="card-body">
+        <div class="mb-4">
+            <a href="{{ url_for('holiday.add_holiday') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-1"></i>Přidat nový svátek
+            </a>
+        </div>
+        
+        <h5 class="mb-3">Svátky v roce {{ current_year }}</h5>
+        {% if current_year_holidays %}
+            <div class="table-responsive mb-4">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Název</th>
+                            <th>Datum</th>
+                            <th>Popis</th>
+                            <th>Opakující se</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for holiday in current_year_holidays %}
+                            <tr>
+                                <td>{{ holiday.name }}</td>
+                                <td>{{ holiday.date.strftime('%d.%m.%Y') }}</td>
+                                <td>{{ holiday.description or '-' }}</td>
+                                <td>
+                                    {% if holiday.is_recurring %}
+                                        <span class="badge bg-success">Ano</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Ne</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('holiday.edit_holiday', holiday_id=holiday.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit me-1"></i>Upravit
+                                    </a>
+                                    <a href="{{ url_for('holiday.delete_holiday', holiday_id=holiday.id) }}" class="btn btn-sm btn-danger" 
+                                       onclick="return confirm('Opravdu chcete smazat tento svátek?')">
+                                        <i class="fas fa-trash me-1"></i>Smazat
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info mb-4">
+                <i class="fas fa-info-circle me-2"></i>Žádné svátky pro aktuální rok.
+            </div>
+        {% endif %}
+        
+        {% if future_holidays %}
+            <h5 class="mb-3">Budoucí svátky</h5>
+            <div class="table-responsive mb-4">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Název</th>
+                            <th>Datum</th>
+                            <th>Popis</th>
+                            <th>Opakující se</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for holiday in future_holidays %}
+                            <tr>
+                                <td>{{ holiday.name }}</td>
+                                <td>{{ holiday.date.strftime('%d.%m.%Y') }}</td>
+                                <td>{{ holiday.description or '-' }}</td>
+                                <td>
+                                    {% if holiday.is_recurring %}
+                                        <span class="badge bg-success">Ano</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Ne</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('holiday.edit_holiday', holiday_id=holiday.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit me-1"></i>Upravit
+                                    </a>
+                                    <a href="{{ url_for('holiday.delete_holiday', holiday_id=holiday.id) }}" class="btn btn-sm btn-danger" 
+                                       onclick="return confirm('Opravdu chcete smazat tento svátek?')">
+                                        <i class="fas fa-trash me-1"></i>Smazat
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+        
+        {% if past_holidays %}
+            <h5 class="mb-3">Minulé svátky</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Název</th>
+                            <th>Datum</th>
+                            <th>Popis</th>
+                            <th>Opakující se</th>
+                            <th>Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for holiday in past_holidays %}
+                            <tr>
+                                <td>{{ holiday.name }}</td>
+                                <td>{{ holiday.date.strftime('%d.%m.%Y') }}</td>
+                                <td>{{ holiday.description or '-' }}</td>
+                                <td>
+                                    {% if holiday.is_recurring %}
+                                        <span class="badge bg-success">Ano</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Ne</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('holiday.edit_holiday', holiday_id=holiday.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit me-1"></i>Upravit
+                                    </a>
+                                    <a href="{{ url_for('holiday.delete_holiday', holiday_id=holiday.id) }}" class="btn btn-sm btn-danger" 
+                                       onclick="return confirm('Opravdu chcete smazat tento svátek?')">
+                                        <i class="fas fa-trash me-1"></i>Smazat
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Reporty{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Reporty</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-calendar-check me-2"></i>Shrnutí volna zaměstnanců</h5>
+                        <p class="card-text">Přehled čerpání dovolené a jiného volna zaměstnanců.</p>
+                        <a href="{{ url_for('report.leave_summary') }}" class="btn btn-primary">Zobrazit report</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Zde můžete přidat další reporty v budoucnu -->
+        </div>
+    </div>
+</div>
+{% endblock %}

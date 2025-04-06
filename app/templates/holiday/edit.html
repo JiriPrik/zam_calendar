@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Upravit svátek{% else %}Přidat svátek{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    {% if is_edit %}Upravit svátek{% else %}Přidat nový svátek{% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{% if is_edit %}{{ url_for('holiday.edit_holiday', holiday_id=holiday.id) }}{% else %}{{ url_for('holiday.add_holiday') }}{% endif %}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
+                        {% for error in form.name.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.date.label(class="form-label") }}
+                        {{ form.date(class="form-control", type="date") }}
+                        {% for error in form.date.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows=3) }}
+                        {% for error in form.description.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.is_recurring(class="form-check-input") }}
+                        {{ form.is_recurring.label(class="form-check-label") }}
+                        <div class="form-text">Zaškrtněte, pokud se svátek opakuje každý rok (např. Vánoce, Nový rok)</div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('holiday.list_holidays') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i>Zrušit
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

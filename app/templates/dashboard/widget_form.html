@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-th-large me-2"></i>{{ title }}</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <div class="mb-3">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control") }}
+                {% for error in form.name.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control", rows=3) }}
+                {% for error in form.description.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+                <div class="form-text">Stručný popis widgetu, který bude zobrazen uživatelům.</div>
+            </div>
+            
+            <div class="mb-3">
+                {{ form.icon.label(class="form-label") }}
+                {{ form.icon(class="form-control") }}
+                {% for error in form.icon.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+                <div class="form-text">Název ikony z Font Awesome, např. "fas fa-chart-bar".</div>
+            </div>
+            
+            <div class="mb-3">
+                {{ form.position.label(class="form-label") }}
+                {{ form.position(class="form-control", type="number") }}
+                {% for error in form.position.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+                <div class="form-text">Výchozí pozice widgetu na dashboardu (nižší číslo = vyšší pozice).</div>
+            </div>
+            
+            <div class="mb-3 form-check">
+                {{ form.is_enabled(class="form-check-input") }}
+                {{ form.is_enabled.label(class="form-check-label") }}
+                <div class="form-text">Pokud je zaškrtnuto, widget bude dostupný pro uživatele.</div>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{{ url_for('dashboard.list_widgets') }}" class="btn btn-secondary me-md-2">Zrušit</a>
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
