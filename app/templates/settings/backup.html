@@ -22,7 +22,7 @@
             <div class="card-body">
                 <p>Vytvořte zálohu aktuálního stavu databáze. Záloha bude uložena na serveru.</p>
 
-                <form method="POST" action="{{ url_for('settings.backup_database') }}">
+                <form method="POST" action="{{ url_for('backup.create_backup') }}">
                     {{ backup_form.hidden_tag() }}
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         {{ backup_form.submit(class="btn btn-primary") }}
@@ -80,7 +80,7 @@
                                                     <p><strong>Záloha:</strong> {{ backup.filename }}</p>
                                                     <p><strong>Vytvořena:</strong> {{ backup.created_at_formatted }}</p>
 
-                                                    <form method="POST" action="{{ url_for('settings.restore_database') }}">
+                                                    <form method="POST" action="{{ url_for('backup.restore_backup') }}">
                                                         {{ restore_form.hidden_tag() }}
                                                         {{ restore_form.backup_file(value=backup.filename) }}
 
@@ -110,7 +110,7 @@
                                                     <p>Opravdu chcete smazat zálohu <strong>{{ backup.filename }}</strong>?</p>
                                                     <p>Tato akce je nevratná!</p>
 
-                                                    <form method="POST" action="{{ url_for('settings.delete_backup_route') }}">
+                                                    <form method="POST" action="{{ url_for('backup.delete_backup') }}">
                                                         {{ delete_form.hidden_tag() }}
                                                         {{ delete_form.backup_file(value=backup.filename) }}
 

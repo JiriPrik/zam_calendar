@@ -52,6 +52,9 @@ def create_app():
     from app.routes.settings import settings as settings_blueprint
     app.register_blueprint(settings_blueprint)
 
+    from app.routes.backup import backup as backup_blueprint
+    app.register_blueprint(backup_blueprint)
+
     # Vytvoření databáze při prvním spuštění
     with app.app_context():
         db.create_all()
