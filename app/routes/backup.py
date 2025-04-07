@@ -1,13 +1,22 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.utils.decorators import admin_required
 from app.forms import BackupDatabaseForm, RestoreDatabaseForm, DeleteBackupForm
-from app.utils.backup import backup_database as create_db_backup, restore_database as restore_db_backup, get_backups
+from app.utils.backup import backup_database as create_db_backup, restore_database as restore_db_backup, get_backups, delete_backup_file
 import os
 import shutil
+import logging
+
+# Nastavení logování
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    filename='backup_debug.log',
+                    filemode='a')
+logger = logging.getLogger(__name__)
 
 backup = Blueprint('backup', __name__)
+
 
 @backup.route('/settings/backup', methods=['GET'])
 @login_required
@@ -78,102 +87,105 @@ def restore_backup():
 @admin_required
 def delete_backup():
     """Smazání zálohy databáze (pouze pro adminy)"""
+    print("=== FUNKCE delete_backup ====", flush=True)
+    print(f"Request method: {request.method}", flush=True)
+    print(f"Request form: {request.form}", flush=True)
+
     form = DeleteBackupForm()
+    print(f"Form data: {form.data}", flush=True)
+    print(f"Form errors: {form.errors}", flush=True)
+    print(f"Form validate: {form.validate()}", flush=True)
 
     if form.validate_on_submit():
         backup_filename = form.backup_file.data
+
+        print(f"Volaní funkce delete_backup_file pro zálohu: {backup_filename}", flush=True)
+
+        # Zkontrolujeme, zda soubory existují
         backup_path = os.path.join('backups', backup_filename)
         metadata_path = os.path.join('backups', backup_filename.replace('.db', '.json'))
+        print(f"Cesta k záloze: {backup_path}", flush=True)
+        print(f"Cesta k metadatům: {metadata_path}", flush=True)
+        print(f"Soubor zálohy existuje: {os.path.exists(backup_path)}", flush=True)
+        print(f"Soubor metadat existuje: {os.path.exists(metadata_path)}", flush=True)
 
         try:
-            import time
-            import subprocess
-            import sys
+            # Použití funkce delete_backup_file
+            print(f"Volaní funkce delete_backup_file pro zálohu: {backup_filename}", flush=True)
 
-            print(f"Pokus o smazání zálohy: {backup_filename}")
-            print(f"Cesta k záloze: {backup_path}")
-            print(f"Cesta k metadatům: {metadata_path}")
+            # Vytvoření adresáře deleted, pokud neexistuje
+            deleted_dir = os.path.join('backups', 'deleted')
+            if not os.path.exists(deleted_dir):
+                os.makedirs(deleted_dir)
+                print(f"Vytvořen adresář pro smazání zálohy: {deleted_dir}", flush=True)
 
-            # Zkontrolujeme, zda soubory existují
-            backup_exists = os.path.exists(backup_path)
-            metadata_exists = os.path.exists(metadata_path)
+            # Přímé přesunutí souborů
+            try:
+                # Přesun souboru zálohy
+                if os.path.exists(backup_path):
+                    new_path = os.path.join(deleted_dir, backup_filename)
+                    print(f"Přesouvám soubor zálohy z {backup_path} do {new_path}", flush=True)
+                    print(f"Soubor zálohy existuje: {os.path.exists(backup_path)}", flush=True)
+                    print(f"Cílový adresář existuje: {os.path.exists(os.path.dirname(new_path))}", flush=True)
+                    print(f"Cílový soubor existuje: {os.path.exists(new_path)}", flush=True)
 
-            print(f"Soubor zálohy existuje: {backup_exists}")
-            print(f"Soubor metadat existuje: {metadata_exists}")
+                    # Pokud cílový soubor existuje, nejprve ho smažeme
+                    if os.path.exists(new_path):
+                        print(f"Mažu existující cílový soubor: {new_path}", flush=True)
+                        os.remove(new_path)
 
-            # Pokus o smazání souborů pomocí různých metod
-            success = True
+                    os.rename(backup_path, new_path)
+                    print(f"Soubor zálohy úspěšně přesunut do: {new_path}", flush=True)
 
-            # Metoda 1: Standardní os.remove
-            if backup_exists:
-                try:
-                    os.remove(backup_path)
-                    print(f"Metoda 1: Soubor zálohy úspěšně smazán pomocí os.remove")
-                except Exception as e:
-                    print(f"Metoda 1: Chyba při mazání souboru zálohy: {str(e)}")
-                    success = False
+                # Přesun souboru metadat
+                if os.path.exists(metadata_path):
+                    new_path = os.path.join(deleted_dir, os.path.basename(metadata_path))
+                    print(f"Přesouvám soubor metadat z {metadata_path} do {new_path}", flush=True)
+                    print(f"Soubor metadat existuje: {os.path.exists(metadata_path)}", flush=True)
+                    print(f"Cílový adresář existuje: {os.path.exists(os.path.dirname(new_path))}", flush=True)
+                    print(f"Cílový soubor existuje: {os.path.exists(new_path)}", flush=True)
 
-            if metadata_exists:
-                try:
-                    os.remove(metadata_path)
-                    print(f"Metoda 1: Soubor metadat úspěšně smazán pomocí os.remove")
-                except Exception as e:
-                    print(f"Metoda 1: Chyba při mazání souboru metadat: {str(e)}")
-                    success = False
+                    # Pokud cílový soubor existuje, nejprve ho smažeme
+                    if os.path.exists(new_path):
+                        print(f"Mažu existující cílový soubor: {new_path}", flush=True)
+                        os.remove(new_path)
 
-            # Pokud metoda 1 selhala, zkusíme metodu 2: os.unlink
-            if not success:
-                if backup_exists and os.path.exists(backup_path):
-                    try:
-                        os.unlink(backup_path)
-                        print(f"Metoda 2: Soubor zálohy úspěšně smazán pomocí os.unlink")
-                        success = True
-                    except Exception as e:
-                        print(f"Metoda 2: Chyba při mazání souboru zálohy: {str(e)}")
-                        success = False
+                    os.rename(metadata_path, new_path)
+                    print(f"Soubor metadat úspěšně přesunut do: {new_path}", flush=True)
 
-                if metadata_exists and os.path.exists(metadata_path):
-                    try:
-                        os.unlink(metadata_path)
-                        print(f"Metoda 2: Soubor metadat úspěšně smazán pomocí os.unlink")
-                        success = True
-                    except Exception as e:
-                        print(f"Metoda 2: Chyba při mazání souboru metadat: {str(e)}")
-                        success = False
+                success = True
+                print(f"Záloha {backup_filename} byla úspěšně smazána", flush=True)
+            except Exception as e:
+                print(f"Chyba při přesunu souborů: {str(e)}", flush=True)
+                success = False
 
-            # Pokud metoda 2 selhala, zkusíme metodu 3: dávkový soubor
-            if not success:
-                try:
-                    # Vytvoření dávkového souboru pro mazání
-                    batch_file = os.path.join('backups', 'delete_backup.bat')
-                    with open(batch_file, 'w') as f:
-                        f.write('@echo off\n')
-                        if backup_exists and os.path.exists(backup_path):
-                            f.write(f'del /F /Q "{os.path.abspath(backup_path)}"\n')
-                        if metadata_exists and os.path.exists(metadata_path):
-                            f.write(f'del /F /Q "{os.path.abspath(metadata_path)}"\n')
-                        f.write('del "%~f0"\n')  # Smazat sám sebe
+            print(f"Výsledek mazání zálohy: {success}", flush=True)
 
-                    # Spustit dávkový soubor
-                    subprocess.Popen(batch_file, shell=True)
-                    print(f"Metoda 3: Dávkový soubor pro mazání vytvořen a spuštěn")
-
-                    # Počkat chvíli, aby se dávkový soubor stihl spustit
-                    time.sleep(1)
-
-                    success = True
-                except Exception as e:
-                    print(f"Metoda 3: Chyba při vytváření dávkového souboru: {str(e)}")
-                    success = False
-
-            # Kontrola, zda byly soubory úspěšně smazány
-            if (not backup_exists or not os.path.exists(backup_path)) and \
-               (not metadata_exists or not os.path.exists(metadata_path)):
+            if success:
                 flash(f'Záloha {backup_filename} byla úspěšně smazána', 'success')
             else:
                 flash(f'Záloha {backup_filename} nebyla úplně smazána', 'warning')
         except Exception as e:
-            print(f"Chyba při mazání zálohy: {str(e)}")
+            print(f"Chyba při mazání zálohy: {str(e)}", flush=True)
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}", flush=True)
             flash(f'Chyba při mazání zálohy: {str(e)}', 'danger')
 
     return redirect(url_for('backup.backup_settings'))
+
+@backup.route('/settings/backup/download/<filename>', methods=['GET'])
+@login_required
+@admin_required
+def download_backup(filename):
+    """Stažení zálohy databáze (pouze pro adminy)"""
+    backup_path = os.path.join('backups', filename)
+
+    if not os.path.exists(backup_path):
+        flash(f'Soubor zálohy {filename} neexistuje', 'danger')
+        return redirect(url_for('backup.backup_settings'))
+
+    try:
+        return send_file(backup_path, as_attachment=True, download_name=filename)
+    except Exception as e:
+        flash(f'Chyba při stahování zálohy: {str(e)}', 'danger')
+        return redirect(url_for('backup.backup_settings'))

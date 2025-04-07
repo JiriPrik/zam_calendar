@@ -55,12 +55,19 @@
                                 <td>{{ backup.size_mb }} MB</td>
                                 <td>
                                     <div class="btn-group" role="group">
+                                        <a href="{{ url_for('backup.download_backup', filename=backup.filename) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-download me-1"></i>Stáhnout
+                                        </a>
                                         <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#restoreModal{{ loop.index }}">
                                             <i class="fas fa-undo me-1"></i>Obnovit
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
-                                            <i class="fas fa-trash me-1"></i>Smazat
-                                        </button>
+                                        <form method="POST" action="{{ url_for('backup.delete_backup') }}" style="display: inline;">
+                                            {{ delete_form.hidden_tag() }}
+                                            {{ delete_form.backup_file(value=backup.filename) }}
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-trash me-1"></i>Smazat
+                                            </button>
+                                        </form>
                                     </div>
 
                                     <!-- Modal pro obnovení -->
@@ -98,30 +105,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Modal pro smazání -->
-                                    <div class="modal fade" id="deleteModal{{ loop.index }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ loop.index }}" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-danger text-white">
-                                                    <h5 class="modal-title" id="deleteModalLabel{{ loop.index }}">Smazání zálohy</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p>Opravdu chcete smazat zálohu <strong>{{ backup.filename }}</strong>?</p>
-                                                    <p>Tato akce je nevratná!</p>
 
-                                                    <form method="POST" action="{{ url_for('backup.delete_backup') }}">
-                                                        {{ delete_form.hidden_tag() }}
-                                                        {{ delete_form.backup_file(value=backup.filename) }}
-
-                                                        <div class="d-grid gap-2">
-                                                            {{ delete_form.submit(class="btn btn-danger") }}
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}

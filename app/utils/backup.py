@@ -1,4 +1,4 @@
-import os
+import os, stat
 import sqlite3
 import shutil
 import json
@@ -167,6 +167,9 @@ def delete_backup_file(backup_filename, backup_dir='backups'):
     Returns:
         bool: True pokud byla záloha úspěšně smazána, jinak False
     """
+    print("=== FUNKCE delete_backup_file ====")
+    print(f"Budeme mazat zálohu: {backup_filename}")
+    print(f"Adresář se zálohami: {backup_dir}")
     try:
         # Cesty k souborům
         backup_path = os.path.join(backup_dir, backup_filename)
@@ -176,21 +179,53 @@ def delete_backup_file(backup_filename, backup_dir='backups'):
         current_app.logger.info(f"Cesta k záloze: {backup_path}")
         current_app.logger.info(f"Cesta k metadatům: {metadata_path}")
 
-        # Smazání souborů
+        # Pokus o přesun souborů do adresáře deleted
+        success = True
+
+        # Vytvoření adresáře deleted, pokud neexistuje
+        deleted_dir = os.path.join(backup_dir, 'deleted')
+        if not os.path.exists(deleted_dir):
+            os.makedirs(deleted_dir)
+            current_app.logger.info(f"Vytvořen adresář pro smazání zálohy: {deleted_dir}")
+
+        # Přesun souboru zálohy
         if os.path.exists(backup_path):
-            current_app.logger.info(f"Soubor zálohy existuje, mazání: {backup_path}")
-            os.remove(backup_path)
+            try:
+                # Zavřít všechna spojení s databází
+                db.session.close()
+                db.engine.dispose()
+
+                # Zkusit přesunout soubor
+                new_path = os.path.join(deleted_dir, backup_filename)
+                print(f"Přesouvám soubor zálohy z {backup_path} do {new_path}")
+                shutil.move(backup_path, new_path)
+                current_app.logger.info(f"Soubor zálohy úspěšně přesunut do: {new_path}")
+            except Exception as e:
+                current_app.logger.error(f"Chyba při přesunu souboru zálohy: {str(e)}")
+                success = False
         else:
             current_app.logger.warning(f"Soubor zálohy neexistuje: {backup_path}")
 
+        # Přesun souboru metadat
         if os.path.exists(metadata_path):
-            current_app.logger.info(f"Soubor metadat existuje, mazání: {metadata_path}")
-            os.remove(metadata_path)
+            try:
+                new_path = os.path.join(deleted_dir, os.path.basename(metadata_path))
+                print(f"Přesouvám soubor metadat z {metadata_path} do {new_path}")
+                shutil.move(metadata_path, new_path)
+                current_app.logger.info(f"Soubor metadat úspěšně přesunut do: {new_path}")
+            except Exception as e:
+                current_app.logger.error(f"Chyba při přesunu souboru metadat: {str(e)}")
+                success = False
         else:
             current_app.logger.warning(f"Soubor metadat neexistuje: {metadata_path}")
 
+        # Kontrola, zda byly soubory přesunuty
+        if os.path.exists(backup_path) or os.path.exists(metadata_path):
+            current_app.logger.warning(f"Některé soubory nebyly přesunuty: záloha existuje: {os.path.exists(backup_path)}, metadata existují: {os.path.exists(metadata_path)}")
+            return False
+
         current_app.logger.info(f"Záloha {backup_filename} byla úspěšně smazána")
-        return True
+        return success
 
     except Exception as e:
         current_app.logger.error(f"Chyba při mazání zálohy {backup_filename}: {str(e)}")
