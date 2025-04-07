@@ -47,6 +47,7 @@
 - Kontrola žádostí o volno na víkendy a svátky
 - Kontrola půldenního volna pouze pro jeden den
 - Mazání zrušených žádostí o volno
+- Zálohování a obnovení databáze
 
 ## Technické detaily
 - Použití Flask-SQLAlchemy pro ORM

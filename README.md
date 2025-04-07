@@ -10,6 +10,7 @@ Aplikace pro registraci a správu dovolených a jiného volna zaměstnanců.
 - Přehledný kalendář volna se zvýrazněním svátků a víkendů
 - Nastavení aplikace (povolení/zakázání volna na víkendy a svátky)
 - Mazání zrušených žádostí o volno
+- Zálohování a obnovení databáze
 - Emailové notifikace o nových žádostech a schválení/zamítnutí
 - Přizpůsobitelný dashboard pro uživatele
 - Tmavý režim a volitelná barevná schémata

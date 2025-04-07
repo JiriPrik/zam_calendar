@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Zálohování a obnovení databáze{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-database me-2"></i>Zálohování a obnovení databáze</h4>
+    </div>
+    <div class="card-body">
+        <p class="lead">Zde můžete vytvořit zálohu databáze nebo obnovit databázi ze zálohy.</p>
+
+        <div class="alert alert-warning">
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>Upozornění</h5>
+            <p>Obnovení databáze ze zálohy přepíše všechna aktuální data. Před obnovením doporučujeme vytvořit zálohu aktuálního stavu.</p>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Vytvoření zálohy</h5>
+            </div>
+            <div class="card-body">
+                <p>Vytvořte zálohu aktuálního stavu databáze. Záloha bude uložena na serveru.</p>
+
+                <form method="POST" action="{{ url_for('settings.backup_database') }}">
+                    {{ backup_form.hidden_tag() }}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        {{ backup_form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if backups %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Dostupné zálohy</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Datum a čas vytvoření</th>
+                                <th>Název souboru</th>
+                                <th>Velikost</th>
+                                <th>Akce</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for backup in backups %}
+                            <tr>
+                                <td>{{ backup.created_at_formatted }}</td>
+                                <td>{{ backup.filename }}</td>
+                                <td>{{ backup.size_mb }} MB</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#restoreModal{{ loop.index }}">
+                                            <i class="fas fa-undo me-1"></i>Obnovit
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
+                                            <i class="fas fa-trash me-1"></i>Smazat
+                                        </button>
+                                    </div>
+
+                                    <!-- Modal pro obnovení -->
+                                    <div class="modal fade" id="restoreModal{{ loop.index }}" tabindex="-1" aria-labelledby="restoreModalLabel{{ loop.index }}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-warning text-dark">
+                                                    <h5 class="modal-title" id="restoreModalLabel{{ loop.index }}">Obnovení databáze ze zálohy</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="alert alert-danger">
+                                                        <h5><i class="fas fa-exclamation-triangle me-2"></i>Varování</h5>
+                                                        <p>Obnovení databáze ze zálohy přepíše všechna aktuální data. Tato akce je nevratná!</p>
+                                                    </div>
+
+                                                    <p><strong>Záloha:</strong> {{ backup.filename }}</p>
+                                                    <p><strong>Vytvořena:</strong> {{ backup.created_at_formatted }}</p>
+
+                                                    <form method="POST" action="{{ url_for('settings.restore_database') }}">
+                                                        {{ restore_form.hidden_tag() }}
+                                                        {{ restore_form.backup_file(value=backup.filename) }}
+
+                                                        <div class="mb-3 form-check">
+                                                            {{ restore_form.confirm(class="form-check-input") }}
+                                                            {{ restore_form.confirm.label(class="form-check-label") }}
+                                                        </div>
+
+                                                        <div class="d-grid gap-2">
+                                                            {{ restore_form.submit(class="btn btn-warning") }}
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal pro smazání -->
+                                    <div class="modal fade" id="deleteModal{{ loop.index }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ loop.index }}" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-danger text-white">
+                                                    <h5 class="modal-title" id="deleteModalLabel{{ loop.index }}">Smazání zálohy</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Opravdu chcete smazat zálohu <strong>{{ backup.filename }}</strong>?</p>
+                                                    <p>Tato akce je nevratná!</p>
+
+                                                    <form method="POST" action="{{ url_for('settings.delete_backup_route') }}">
+                                                        {{ delete_form.hidden_tag() }}
+                                                        {{ delete_form.backup_file(value=backup.filename) }}
+
+                                                        <div class="d-grid gap-2">
+                                                            {{ delete_form.submit(class="btn btn-danger") }}
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <p class="mb-0">Zatím nebyly vytvořeny žádné zálohy.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

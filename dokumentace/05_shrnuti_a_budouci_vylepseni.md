@@ -41,6 +41,7 @@ Vyvinuli jsme kompletní aplikaci pro registraci a správu dovolených zaměstna
    - Nastavení aplikace (povolení/zakázání volna na víkendy a svátky)
    - Mazání zrušených žádostí o volno (za měsíc, rok nebo všechny)
    - Automatické nebo ruční mazání zrušených žádostí
+   - Zálohování a obnovení databáze
 
 7. **Uživatelské rozhraní**
    - Moderní design s Bootstrap 5
@@ -102,6 +103,7 @@ V průběhu vývoje jsme implementovali několik významných vylepšení, kter�
 - **Automatické vyplnění data konce** - Při vytváření žádosti o volno se automaticky vyplní datum konce stejným datem jako datum začátku.
 - **Podpora půldenního volna** - Přidána možnost žádat o půldenní volno, ale pouze pokud je volno na jeden den.
 - **Mazání zrušených žádostí** - Přidána možnost mazat zrušené žádosti o volno za určité období (měsíc, rok, všechny).
+- **Zálohování a obnovení databáze** - Přidána možnost zálohovat databázi a obnovit ji ze zálohy.
 
 ### 6. Emailové notifikace
 - **Notifikace o nových žádostech** - Implementováno odesílání emailových notifikací manažerům při vytvoření nové žádosti o volno.

@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, BooleanField, PasswordField, SubmitField, SelectField
+from flask_wtf.file import FileField, FileAllowed, FileRequired
+from wtforms import StringField, IntegerField, BooleanField, PasswordField, SubmitField, SelectField, HiddenField
 from wtforms.validators import DataRequired, Email, NumberRange, Optional
 
 class AppSettingsForm(FlaskForm):
@@ -19,6 +20,21 @@ class AppSettingsForm(FlaskForm):
     manual_delete = SubmitField('Smazat zrušené žádosti nyní')
 
     submit = SubmitField('Uložit nastavení')
+
+class BackupDatabaseForm(FlaskForm):
+    """Formulář pro zálohování databáze"""
+    submit = SubmitField('Vytvořit zálohu')
+
+class RestoreDatabaseForm(FlaskForm):
+    """Formulář pro obnovení databáze ze zálohy"""
+    backup_file = HiddenField('Soubor zálohy', validators=[DataRequired()])
+    confirm = BooleanField('Potvrzuji, že chci obnovit databázi ze zálohy. Všechna aktuální data budou nahrazena.', validators=[DataRequired()])
+    submit = SubmitField('Obnovit databázi')
+
+class DeleteBackupForm(FlaskForm):
+    """Formulář pro smazání zálohy"""
+    backup_file = HiddenField('Soubor zálohy', validators=[DataRequired()])
+    submit = SubmitField('Smazat zálohu')
 
 class SmtpSettingsForm(FlaskForm):
     """Formulář pro nastavení SMTP serveru"""

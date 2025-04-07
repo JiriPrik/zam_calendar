@@ -1,11 +1,16 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file
 from flask_login import login_required, current_user
 from app import db
 from app.models import SmtpSettings, AppSettings, LeaveRequest, LeaveStatus
-from app.forms import SmtpSettingsForm, AppSettingsForm
+from app.forms import SmtpSettingsForm, AppSettingsForm, BackupDatabaseForm, RestoreDatabaseForm, DeleteBackupForm
 from app.utils.decorators import admin_required
 from app.utils.email import send_email
 from app.utils.cleanup import delete_cancelled_requests
+from app.utils.backup import backup_database as create_db_backup, restore_database as restore_db_backup, get_backups, delete_backup_file as delete_db_backup
+
+# Pro ladění
+print(f"delete_db_backup: {delete_db_backup}")
+import os
 
 settings = Blueprint('settings', __name__)
 
@@ -55,6 +60,96 @@ def app_settings():
             return redirect(url_for('settings.app_settings'))
 
     return render_template('settings/app.html', form=form, title='Nastavení aplikace', cancelled_count=cancelled_count)
+
+@settings.route('/settings/backup', methods=['GET'])
+@login_required
+@admin_required
+def backup_settings():
+    """Stránka pro zálohování a obnovení databáze (pouze pro adminy)"""
+    backup_form = BackupDatabaseForm()
+    restore_form = RestoreDatabaseForm()
+    delete_form = DeleteBackupForm()
+
+    # Získání seznamu záloh
+    backups = get_backups()
+
+    return render_template('settings/backup.html',
+                           title='Zálohování a obnovení databáze',
+                           backup_form=backup_form,
+                           restore_form=restore_form,
+                           delete_form=delete_form,
+                           backups=backups)
+
+@settings.route('/settings/backup/create', methods=['POST'])
+@login_required
+@admin_required
+def backup_database():
+    """Vytvoření zálohy databáze (pouze pro adminy)"""
+    form = BackupDatabaseForm()
+
+    if form.validate_on_submit():
+        try:
+            # Vytvoření zálohy
+            metadata = create_db_backup()
+            flash(f'Záloha databáze byla úspěšně vytvořena: {metadata["filename"]}', 'success')
+        except Exception as e:
+            flash(f'Chyba při vytváření zálohy databáze: {str(e)}', 'danger')
+
+    return redirect(url_for('settings.backup_settings'))
+
+@settings.route('/settings/backup/restore', methods=['POST'])
+@login_required
+@admin_required
+def restore_database():
+    """Obnovení databáze ze zálohy (pouze pro adminy)"""
+    form = RestoreDatabaseForm()
+
+    if form.validate_on_submit():
+        backup_filename = form.backup_file.data
+        backup_path = os.path.join('backups', backup_filename)
+
+        if not os.path.exists(backup_path):
+            flash(f'Soubor zálohy {backup_filename} neexistuje', 'danger')
+            return redirect(url_for('settings.backup_settings'))
+
+        try:
+            # Obnovení databáze ze zálohy
+            success = restore_db_backup(backup_path)
+
+            if success:
+                flash(f'Databáze byla úspěšně obnovena ze zálohy {backup_filename}', 'success')
+            else:
+                flash('Nepodařilo se obnovit databázi ze zálohy', 'danger')
+        except Exception as e:
+            flash(f'Chyba při obnovení databáze: {str(e)}', 'danger')
+
+    return redirect(url_for('settings.backup_settings'))
+
+@settings.route('/settings/backup/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_backup_route():
+    """Smazání zálohy databáze (pouze pro adminy)"""
+    form = DeleteBackupForm()
+
+    if form.validate_on_submit():
+        backup_filename = form.backup_file.data
+
+        try:
+            # Smazání zálohy
+            print(f"Mazání zálohy: {backup_filename}")
+            success = delete_db_backup(backup_filename)
+            print(f"Výsledek mazání: {success}")
+
+            if success:
+                flash(f'Záloha {backup_filename} byla úspěšně smazána', 'success')
+            else:
+                flash(f'Nepodařilo se smazat zálohu {backup_filename}', 'danger')
+        except Exception as e:
+            print(f"Chyba při mazání zálohy: {str(e)}")
+            flash(f'Chyba při mazání zálohy: {str(e)}', 'danger')
+
+    return redirect(url_for('settings.backup_settings'))
 
 @settings.route('/settings/smtp', methods=['GET', 'POST'])
 @login_required
