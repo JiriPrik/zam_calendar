@@ -14,10 +14,15 @@
 - [jQuery](https://jquery.com/) - JavaScript knihovna pro manipulaci s DOM
 - [FullCalendar.js](https://fullcalendar.io/) - JavaScript knihovna pro zobrazení kalendáře
 - [Chart.js](https://www.chartjs.org/) - JavaScript knihovna pro vytváření grafů
+- [DataTables](https://datatables.net/) - JavaScript knihovna pro pokročilé tabulky s filtrovaním a řazením
 
 ## Databáze
 - [SQLite](https://www.sqlite.org/) - Lehká relační databáze
 - [SQLAlchemy](https://www.sqlalchemy.org/) - SQL toolkit a ORM pro Python
+
+## Emailové notifikace
+- [smtplib](https://docs.python.org/3/library/smtplib.html) - Standardní knihovna Pythonu pro odesílání emailů pomocí SMTP
+- [email.mime](https://docs.python.org/3/library/email.mime.html) - Standardní knihovna Pythonu pro vytváření MIME zpráv
 
 ## Vývojové nástroje
 - [Visual Studio Code](https://code.visualstudio.com/) - Editor kódu

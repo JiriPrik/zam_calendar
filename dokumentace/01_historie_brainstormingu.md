@@ -44,6 +44,9 @@
 - Kontrola překrývajících se žádostí o volno
 - Zobrazení neschválených volna jinou barvou v kalendáři
 - Nezobrazování zamítnutých žádostí v kalendáři
+- Kontrola žádostí o volno na víkendy a svátky
+- Kontrola půldenního volna pouze pro jeden den
+- Mazání zrušených žádostí o volno
 
 ## Technické detaily
 - Použití Flask-SQLAlchemy pro ORM
@@ -54,11 +57,11 @@
 - SQLite databáze
 
 ## Další možná vylepšení
-- Export dat do Excel/PDF
-- Notifikace emailem
 - Statistiky čerpání dovolené
 - Plánování týmových kapacit
 - Mobilní verze aplikace
+- In-app notifikace
+- Připomenutí nevyčerpané dovolené
 
 ## Řešené problémy
 - Ambiguita ve vztazích mezi tabulkami (řešeno explicitním určením join podmínek)

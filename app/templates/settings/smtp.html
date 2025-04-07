@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-envelope me-2"></i>{{ title }}</h4>
+    </div>
+    <div class="card-body">
+        <p class="lead">Nastavte parametry SMTP serveru pro odesílání emailových notifikací.</p>
+
+        <form method="POST" action="{{ url_for('settings.smtp_settings') }}">
+            {{ form.hidden_tag() }}
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Nastavení serveru</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                {{ form.server.label(class="form-label") }}
+                                {{ form.server(class="form-control") }}
+                                {% for error in form.server.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-text">Např. smtp.gmail.com, smtp.office365.com</div>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.port.label(class="form-label") }}
+                                {{ form.port(class="form-control", type="number") }}
+                                {% for error in form.port.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-text">Běžné porty: 25, 465 (SSL), 587 (TLS)</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.use_tls(class="form-check-input") }}
+                                    {{ form.use_tls.label(class="form-check-label") }}
+                                </div>
+                                <div class="form-text">Doporučeno pro port 587</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.use_ssl(class="form-check-input") }}
+                                    {{ form.use_ssl.label(class="form-check-label") }}
+                                </div>
+                                <div class="form-text">Doporučeno pro port 465</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Přihlašovací údaje</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                {{ form.username.label(class="form-label") }}
+                                {{ form.username(class="form-control") }}
+                                {% for error in form.username.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-text">Obvykle emailová adresa</div>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.password.label(class="form-label") }}
+                                {{ form.password(class="form-control") }}
+                                {% for error in form.password.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-text">Pro Gmail a jiné služby může být vyžadováno heslo pro aplikace. Heslo může obsahovat mezery.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.default_sender.label(class="form-label") }}
+                                {{ form.default_sender(class="form-control") }}
+                                {% for error in form.default_sender.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                                <div class="form-text">Emailová adresa, ze které budou odesílány notifikace</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Nastavení notifikací</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_enabled(class="form-check-input") }}
+                            {{ form.is_enabled.label(class="form-check-label") }}
+                        </div>
+                        <div class="form-text">Pokud je vypnuto, nebudou odesílány žádné emailové notifikace</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="send_test_email" name="send_test_email">
+                            <label class="form-check-label" for="send_test_email">
+                                Odeslat testovací email po uložení nastavení
+                            </label>
+                        </div>
+                        <div class="form-text">Testovací email bude odeslán na vaši emailovou adresu ({{ current_user.email }})</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle me-2"></i>Typy emailových notifikací</h5>
+                <ul>
+                    <li><strong>Nová žádost o volno</strong> - Odesílána manažerovi, když zaměstnanec podá novou žádost o volno</li>
+                    <li><strong>Změna stavu žádosti</strong> - Odesílána zaměstnanci, když manažer schválí nebo zamítne jeho žádost o volno</li>
+                </ul>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary me-md-2">Zrušit</a>
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

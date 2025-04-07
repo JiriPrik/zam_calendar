@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app import db
-from app.models import LeaveRequest, LeaveType, LeaveStatus, User
+from app.models import LeaveRequest, LeaveType, LeaveStatus, User, AppSettings, Holiday
 from app.forms import LeaveRequestForm, LeaveApprovalForm
-from datetime import datetime
+from datetime import datetime, date
 from wtforms.validators import ValidationError
+from app.utils.email import send_new_leave_request_notification, send_leave_request_status_notification
 
 leave = Blueprint('leave', __name__)
 
@@ -20,6 +21,32 @@ def request_leave():
         try:
             # Kontrola překrývajících se žádostí
             form.validate_overlapping()
+
+            # Kontrola víkendů a svátků
+            app_settings = AppSettings.query.first()
+            if app_settings:
+                # Kontrola víkendů
+                if not app_settings.allow_weekend_leave:
+                    start_date = form.start_date.data
+                    end_date = form.end_date.data
+                    current_date = start_date
+                    while current_date <= end_date:
+                        # 5 = sobota, 6 = neděle
+                        if current_date.weekday() >= 5:
+                            raise ValidationError(f'Není povoleno žádat o volno na víkendy. {current_date.strftime("%d.%m.%Y")} je víkend.')
+                        current_date = date(current_date.year, current_date.month, current_date.day + 1)
+
+                # Kontrola svátků
+                if not app_settings.allow_holiday_leave:
+                    start_date = form.start_date.data
+                    end_date = form.end_date.data
+                    holidays = Holiday.query.filter(
+                        Holiday.date.between(start_date, end_date)
+                    ).all()
+
+                    if holidays:
+                        holiday_dates = ', '.join([h.date.strftime('%d.%m.%Y') for h in holidays])
+                        raise ValidationError(f'Není povoleno žádat o volno na svátky. Svátky v daném období: {holiday_dates}')
 
             # Získání typu volna
             leave_type = LeaveType.query.get(form.leave_type.data)
@@ -51,6 +78,10 @@ def request_leave():
 
             db.session.add(leave_request)
             db.session.commit()
+
+            # Odeslání notifikace manažerovi (pokud není automaticky schváleno)
+            if leave_request.status != LeaveStatus.APPROVED:
+                send_new_leave_request_notification(leave_request)
 
             flash(success_message, 'success')
             return redirect(url_for('main.index'))
@@ -106,6 +137,9 @@ def approve_request(request_id):
         leave_request.updated_at = datetime.utcnow()
 
         db.session.commit()
+
+        # Odeslání notifikace zaměstnanci o změně stavu žádosti
+        send_leave_request_status_notification(leave_request)
 
         status_text = 'schválena' if form.status.data == LeaveStatus.APPROVED else 'zamítnuta'
         flash(f'Žádost byla úspěšně {status_text}', 'success')

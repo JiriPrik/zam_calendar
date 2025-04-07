@@ -64,13 +64,42 @@
     document.addEventListener('DOMContentLoaded', function() {
         const startDateInput = document.getElementById('start_date');
         const endDateInput = document.getElementById('end_date');
+        const halfDayCheckbox = document.getElementById('half_day');
 
+        // Automaticky vyplnit datum konce stejným datem jako datum začátku
         startDateInput.addEventListener('change', function() {
-            // Pokud je datum konce dříve než datum začátku, nastavíme datum konce na datum začátku
-            if (endDateInput.value && new Date(endDateInput.value) < new Date(startDateInput.value)) {
-                endDateInput.value = startDateInput.value;
-            }
+            // Nastavíme datum konce na datum začátku
+            endDateInput.value = startDateInput.value;
+
+            // Kontrola půldenního volna
+            updateHalfDayState();
         });
+
+        // Kontrola půldenního volna při změně data konce
+        endDateInput.addEventListener('change', function() {
+            updateHalfDayState();
+        });
+
+        // Funkce pro aktualizaci stavu půldenního volna
+        function updateHalfDayState() {
+            if (startDateInput.value && endDateInput.value) {
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+
+                // Pokud je volno na jeden den, povolujeme půldenní volno
+                if (startDate.getTime() === endDate.getTime()) {
+                    halfDayCheckbox.disabled = false;
+                    document.querySelector('label[for="half_day"]').classList.remove('text-muted');
+                } else {
+                    halfDayCheckbox.disabled = true;
+                    halfDayCheckbox.checked = false;
+                    document.querySelector('label[for="half_day"]').classList.add('text-muted');
+                }
+            }
+        }
+
+        // Počáteční kontrola půldenního volna
+        updateHalfDayState();
     });
 </script>
 {% endblock %}

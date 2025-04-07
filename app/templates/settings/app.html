@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-cogs me-2"></i>{{ title }}</h4>
+    </div>
+    <div class="card-body">
+        <p class="lead">Nastavte obecné parametry aplikace pro správu dovolených.</p>
+
+        <form method="POST" action="{{ url_for('settings.app_settings') }}">
+            {{ form.hidden_tag() }}
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Nastavení žádostí o volno</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.allow_weekend_leave(class="form-check-input") }}
+                            {{ form.allow_weekend_leave.label(class="form-check-label") }}
+                        </div>
+                        <div class="form-text">Pokud je povoleno, uživatelé mohou žádat o volno i na víkendy (sobota, neděle)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.allow_holiday_leave(class="form-check-input") }}
+                            {{ form.allow_holiday_leave.label(class="form-check-label") }}
+                        </div>
+                        <div class="form-text">Pokud je povoleno, uživatelé mohou žádat o volno i na svátky</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Mazání zrušených žádostí</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <p class="mb-0"><i class="fas fa-info-circle me-2"></i>Aktuální počet zrušených žádostí v systému: <strong>{{ cancelled_count }}</strong></p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.auto_delete_cancelled(class="form-check-input") }}
+                            {{ form.auto_delete_cancelled.label(class="form-check-label") }}
+                        </div>
+                        <div class="form-text">Pokud je povoleno, systém bude automaticky mazat zrušené žádosti podle nastaveného období</div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.delete_cancelled_period.label(class="form-label") }}
+                        {{ form.delete_cancelled_period(class="form-select") }}
+                        <div class="form-text">Vyberte období, za které chcete mazat zrušené žádosti</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        {{ form.manual_delete(class="btn btn-danger") }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle me-2"></i>Informace o nastavení</h5>
+                <p>Tato nastavení ovlivňují, jak uživatelé mohou žádat o volno:</p>
+                <ul>
+                    <li>Pokud není povoleno žádat o volno na víkendy, systém automaticky zamítne žádosti, které zahrnují sobotu nebo neděli</li>
+                    <li>Pokud není povoleno žádat o volno na svátky, systém automaticky zamítne žádosti, které zahrnují státní svátky</li>
+                    <li>Mazání zrušených žádostí pomáhá udržet databázi čistou a zlepšuje výkon aplikace</li>
+                </ul>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary me-md-2">Zrušit</a>
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

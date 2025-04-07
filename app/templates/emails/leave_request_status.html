@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #471435;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #777;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .approved {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .rejected {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .pending {
+            background-color: #fcf8e3;
+            color: #8a6d3b;
+        }
+        .cancelled {
+            background-color: #f5f5f5;
+            color: #777;
+        }
+        .button {
+            display: inline-block;
+            background-color: #471435;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Aktualizace stavu žádosti o volno</h1>
+    </div>
+    <div class="content">
+        <p>Vážený/á {{ employee.first_name }} {{ employee.last_name }},</p>
+        
+        <p>stav Vaší žádosti o volno byl aktualizován. Níže najdete detaily:</p>
+        
+        <table>
+            <tr>
+                <th>Typ volna</th>
+                <td>{{ leave_request.leave_type.name }}</td>
+            </tr>
+            <tr>
+                <th>Od</th>
+                <td>{{ leave_request.start_date.strftime('%d.%m.%Y') }}</td>
+            </tr>
+            <tr>
+                <th>Do</th>
+                <td>{{ leave_request.end_date.strftime('%d.%m.%Y') }}</td>
+            </tr>
+            <tr>
+                <th>Počet dní</th>
+                <td>{{ leave_request.duration_days() }}</td>
+            </tr>
+            <tr>
+                <th>Stav</th>
+                <td>
+                    {% if leave_request.status == 'approved' %}
+                        <span class="status approved">Schváleno</span>
+                    {% elif leave_request.status == 'rejected' %}
+                        <span class="status rejected">Zamítnuto</span>
+                    {% elif leave_request.status == 'pending' %}
+                        <span class="status pending">Čeká na schválení</span>
+                    {% elif leave_request.status == 'cancelled' %}
+                        <span class="status cancelled">Zrušeno</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% if leave_request.comment %}
+            <tr>
+                <th>Komentář</th>
+                <td>{{ leave_request.comment }}</td>
+            </tr>
+            {% endif %}
+        </table>
+        
+        <p>Pro zobrazení všech Vašich žádostí klikněte na tlačítko níže:</p>
+        
+        <a href="{{ url_for('leave.my_requests', _external=True) }}" class="button">Moje žádosti</a>
+        
+        <p>Děkujeme,<br>Systém pro správu dovolených</p>
+    </div>
+    <div class="footer">
+        <p>Toto je automaticky generovaný email, prosím neodpovídejte na něj.</p>
+    </div>
+</body>
+</html>

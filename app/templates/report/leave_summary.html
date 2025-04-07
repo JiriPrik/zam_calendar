@@ -26,7 +26,7 @@
     <div class="card-body">
         {% if employee_stats %}
             <div class="table-responsive mb-4">
-                <table class="table table-hover">
+                <table class="table table-hover datatable" id="employee-stats-table">
                     <thead>
                         <tr>
                             <th>Zaměstnanec</th>
@@ -53,7 +53,7 @@
                                 <td>
                                     {% set percentage = ((stats.total_leave - stats.remaining_leave) / stats.total_leave * 100) if stats.total_leave > 0 else 0 %}
                                     <div class="progress">
-                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ percentage }}%;" 
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ percentage }}%;"
                                              aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100">
                                             {{ percentage|round }}%
                                         </div>
@@ -69,10 +69,10 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <h5 class="mb-3">Čerpání volna podle typu</h5>
             <div class="table-responsive mb-4">
-                <table class="table table-hover">
+                <table class="table table-hover datatable" id="leave-by-type-table">
                     <thead>
                         <tr>
                             <th>Zaměstnanec</th>
@@ -95,7 +95,7 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <h5 class="mb-3">Čerpání volna podle měsíců</h5>
             <div class="chart-container">
                 <canvas id="leaveByMonthChart"></canvas>
@@ -105,7 +105,7 @@
                 <i class="fas fa-info-circle me-2"></i>Žádní zaměstnanci k zobrazení.
             </div>
         {% endif %}
-        
+
         <div class="mt-3">
             <a href="{{ url_for('report.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-1"></i>Zpět na reporty
@@ -121,7 +121,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Data pro graf podle měsíců
         var ctx = document.getElementById('leaveByMonthChart').getContext('2d');
-        
+
         var datasets = [];
         {% for stats in employee_stats %}
             datasets.push({
@@ -131,7 +131,7 @@
                 fill: false
             });
         {% endfor %}
-        
+
         var myChart = new Chart(ctx, {
             type: 'line',
             data: {

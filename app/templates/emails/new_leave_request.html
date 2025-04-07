@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #471435;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #777;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .button {
+            display: inline-block;
+            background-color: #471435;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Nová žádost o volno</h1>
+    </div>
+    <div class="content">
+        <p>Vážený/á {{ manager.first_name }} {{ manager.last_name }},</p>
+        
+        <p>zaměstnanec <strong>{{ employee.first_name }} {{ employee.last_name }}</strong> podal novou žádost o volno. Níže najdete detaily žádosti:</p>
+        
+        <table>
+            <tr>
+                <th>Typ volna</th>
+                <td>{{ leave_request.leave_type.name }}</td>
+            </tr>
+            <tr>
+                <th>Od</th>
+                <td>{{ leave_request.start_date.strftime('%d.%m.%Y') }}</td>
+            </tr>
+            <tr>
+                <th>Do</th>
+                <td>{{ leave_request.end_date.strftime('%d.%m.%Y') }}</td>
+            </tr>
+            <tr>
+                <th>Počet dní</th>
+                <td>{{ leave_request.duration_days() }}</td>
+            </tr>
+            {% if leave_request.reason %}
+            <tr>
+                <th>Důvod</th>
+                <td>{{ leave_request.reason }}</td>
+            </tr>
+            {% endif %}
+        </table>
+        
+        <p>Pro schválení nebo zamítnutí této žádosti klikněte na tlačítko níže:</p>
+        
+        <a href="{{ url_for('leave.approve_request', request_id=leave_request.id, _external=True) }}" class="button">Zobrazit žádost</a>
+        
+        <p>Děkujeme,<br>Systém pro správu dovolených</p>
+    </div>
+    <div class="footer">
+        <p>Toto je automaticky generovaný email, prosím neodpovídejte na něj.</p>
+    </div>
+</body>
+</html>

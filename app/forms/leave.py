@@ -14,6 +14,12 @@ class LeaveRequestForm(FlaskForm):
     request_id = HiddenField()  # Pro případ úpravy existující žádosti
     submit = SubmitField('Odeslat žádost')
 
+    def validate_half_day(self, half_day):
+        """Kontrola, zda je půldenní volno povoleno pouze pro jeden den"""
+        if half_day.data and self.start_date.data and self.end_date.data:
+            if self.start_date.data != self.end_date.data:
+                raise ValidationError('Půldenní volno je možné pouze pro jeden den.')
+
     def validate_end_date(self, end_date):
         if self.start_date.data and end_date.data:
             if end_date.data < self.start_date.data:

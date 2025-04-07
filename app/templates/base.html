@@ -17,6 +17,11 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+
     <!-- Custom CSS -->
     <style>
         /* Základní barevná schémata */
@@ -184,13 +189,11 @@
         .card {
             border-radius: 0.5rem;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            transition: transform 0.3s, box-shadow 0.3s;
             margin-bottom: 1.5rem;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
         }
 
         .btn {
@@ -231,6 +234,123 @@
 
         .table th {
             font-weight: 500;
+        }
+
+        /* DataTables styly */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 1rem;
+        }
+
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            margin-top: 1rem;
+        }
+
+        .dataTables_wrapper .dataTables_filter {
+            margin-left: 20px;
+            min-width: 300px;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            padding: 0.375rem 0.75rem;
+            margin-left: 0.5rem;
+            width: 250px;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            padding: 0.375rem 0.75rem;
+            min-width: 70px;
+        }
+
+        .dataTables_wrapper .dataTables_length {
+            min-width: 200px;
+            padding-left: 15px;
+        }
+
+        .dataTables_wrapper .btn-group .btn {
+            margin-right: 0.25rem;
+        }
+
+        .dataTables_wrapper .dt-buttons {
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        /* Oprava zobrazení počtu výsledků */
+        .dataTables_wrapper .dataTables_length label {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            margin-bottom: 0;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            margin: 0 10px;
+            padding-right: 30px;
+        }
+
+        /* Oprava vyhledávacího pole */
+        .dataTables_wrapper .dataTables_filter {
+            text-align: center;
+        }
+
+        .dataTables_wrapper .dataTables_filter label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            margin-bottom: 0;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            margin-left: 10px;
+            min-width: 250px;
+            max-width: 100%;
+        }
+
+        /* Oprava pro mobilní zobrazení */
+        @media (max-width: 767px) {
+            .dataTables_wrapper .dataTables_length,
+            .dataTables_wrapper .dataTables_filter,
+            .dataTables_wrapper .dt-buttons {
+                text-align: center;
+                margin-bottom: 10px;
+                width: 100%;
+            }
+
+            .dataTables_wrapper .dataTables_filter input {
+                width: calc(100% - 70px);
+                min-width: auto;
+            }
+
+            .dataTables_wrapper .dataTables_length select {
+                width: 70px;
+            }
+        }
+
+        /* Tmavý režim pro DataTables */
+        [data-bs-theme="dark"] .dataTables_wrapper .dataTables_filter input,
+        [data-bs-theme="dark"] .dataTables_wrapper .dataTables_length select {
+            background-color: #2d2d2d;
+            border-color: #444;
+            color: #dee2e6;
+        }
+
+        [data-bs-theme="dark"] .dataTables_wrapper .dataTables_info,
+        [data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: #dee2e6 !important;
+        }
+
+        [data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        [data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: #2d2d2d !important;
+            border-color: #444 !important;
+            color: #dee2e6 !important;
         }
 
         .badge {
@@ -312,11 +432,9 @@
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(10px);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
             }
         }
     </style>
@@ -387,6 +505,17 @@
                                     <li>
                                         <a class="dropdown-item" href="{{ url_for('leave_type.list_leave_types') }}">
                                             <i class="fas fa-list-alt me-1"></i>Typy volna
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('settings.app_settings') }}">
+                                            <i class="fas fa-cogs me-1"></i>Nastavení aplikace
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('settings.smtp_settings') }}">
+                                            <i class="fas fa-envelope me-1"></i>Nastavení emailu
                                         </a>
                                     </li>
                                 </ul>
@@ -621,6 +750,49 @@
                         darkModeToggle.querySelector('i').classList.remove('fa-moon');
                         darkModeToggle.querySelector('i').classList.add('fa-sun');
                     }
+                });
+            }
+        });
+    </script>
+
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
+    <!-- Inicializace DataTables -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializace DataTables pro tabulky s třídou 'datatable'
+            if ($.fn.DataTable) {
+                $('.datatable').DataTable({
+                    responsive: true,
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/cs.json'
+                    },
+                    dom: '<"row mb-3"<"col-sm-3"l><"col-sm-6 text-center"f><"col-sm-3 text-end"B>><"row"<"col-sm-12"rt>><"row"<"col-sm-5"i><"col-sm-7"p>>',
+                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Vše"]],
+                    buttons: [
+                        {
+                            extend: 'collection',
+                            text: '<i class="fas fa-download me-1"></i>Export',
+                            className: 'btn-sm btn-outline-primary',
+                            buttons: [
+                                'excel',
+                                'csv',
+                                'pdf',
+                                'print'
+                            ]
+                        }
+                    ]
                 });
             }
         });

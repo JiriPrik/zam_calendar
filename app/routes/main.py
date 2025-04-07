@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, jsonify
+from flask import Blueprint, render_template, redirect, url_for, jsonify, request, session
 from flask_login import login_required, current_user
 from app.models import LeaveRequest, User, LeaveStatus, Holiday, DashboardWidget, UserDashboardSetting
 from datetime import datetime, date
@@ -97,13 +97,29 @@ def profile():
 @main.route('/calendar')
 @login_required
 def calendar():
+    # Zpracování přepínače zobrazení všech dovolených
+    show_all = False
+    if current_user.is_manager() or current_user.is_admin():
+        # Získání hodnoty z URL parametru nebo session
+        if 'show_all' in request.args:
+            show_all = request.args.get('show_all') == 'true'
+            session['show_all_leaves'] = show_all
+        elif 'show_all_leaves' in session:
+            show_all = session['show_all_leaves']
+
     # Získání všech žádostí o volno pro zobrazení v kalendáři
     if current_user.is_manager():
-        # Manažeři vidí žádosti svých podřízených (kromě zamítnutých)
-        leave_requests = LeaveRequest.query.join(User, LeaveRequest.user_id == User.id).filter(
-            User.manager_id == current_user.id,
-            LeaveRequest.status != LeaveStatus.REJECTED
-        ).all()
+        if show_all:
+            # Manažeři vidí všechny žádosti (kromě zamítnutých)
+            leave_requests = LeaveRequest.query.filter(
+                LeaveRequest.status != LeaveStatus.REJECTED
+            ).all()
+        else:
+            # Manažeři vidí žádosti svých podřízených (kromě zamítnutých)
+            leave_requests = LeaveRequest.query.join(User, LeaveRequest.user_id == User.id).filter(
+                User.manager_id == current_user.id,
+                LeaveRequest.status != LeaveStatus.REJECTED
+            ).all()
     else:
         # Běžní uživatelé vidí jen své žádosti (kromě zamítnutých)
         leave_requests = LeaveRequest.query.filter(
@@ -135,4 +151,5 @@ def calendar():
     return render_template('main/calendar.html',
                           title='Kalendář',
                           leave_requests=leave_requests,
-                          holidays=json.dumps(holiday_dates))
+                          holidays=json.dumps(holiday_dates),
+                          show_all=show_all)

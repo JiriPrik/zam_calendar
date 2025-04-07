@@ -8,10 +8,14 @@ Aplikace pro registraci a správu dovolených a jiného volna zaměstnanců.
 - Schvalování žádostí o volno nadřízeným
 - Automatické schvalování určitých typů volna
 - Přehledný kalendář volna se zvýrazněním svátků a víkendů
+- Nastavení aplikace (povolení/zakázání volna na víkendy a svátky)
+- Mazání zrušených žádostí o volno
+- Emailové notifikace o nových žádostech a schválení/zamítnutí
 - Přizpůsobitelný dashboard pro uživatele
 - Tmavý režim a volitelná barevná schémata
 - Správa uživatelů a rolí
 - Reporting a statistiky
+- Pokročilé filtrovaní a řazení v tabulkách
 
 ## Technologie
 
