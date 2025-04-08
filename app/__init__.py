@@ -18,6 +18,7 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-secret-key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///app.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # app.config['WTF_CSRF_ENABLED'] = False # Ochrana CSRF znovu zapnuta
 
     # Inicializace rozšíření s aplikací
     db.init_app(app)

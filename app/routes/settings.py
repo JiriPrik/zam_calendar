@@ -2,11 +2,11 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from app import db
 from app.models import SmtpSettings, AppSettings, LeaveRequest, LeaveStatus
-from app.forms import SmtpSettingsForm, AppSettingsForm, BackupDatabaseForm, RestoreDatabaseForm, DeleteBackupForm
+from app.forms import SmtpSettingsForm, AppSettingsForm, BackupDatabaseForm, DeleteBackupForm # Odstraněn RestoreDatabaseForm
 from app.utils.decorators import admin_required
 from app.utils.email import send_email
 from app.utils.cleanup import delete_cancelled_requests
-from app.utils.backup import backup_database as create_db_backup, restore_database as restore_db_backup, get_backups, delete_backup_file as delete_db_backup
+from app.utils.backup import backup_database as create_db_backup, get_backups, delete_backup_file as delete_db_backup # Odstraněn restore_database
 
 # Pro ladění
 print(f"delete_db_backup: {delete_db_backup}")
@@ -67,7 +67,7 @@ def app_settings():
 def backup_settings():
     """Stránka pro zálohování a obnovení databáze (pouze pro adminy)"""
     backup_form = BackupDatabaseForm()
-    restore_form = RestoreDatabaseForm()
+    # restore_form = RestoreDatabaseForm() # Odstraněno
     delete_form = DeleteBackupForm()
 
     # Získání seznamu záloh
@@ -76,7 +76,7 @@ def backup_settings():
     return render_template('settings/backup.html',
                            title='Zálohování a obnovení databáze',
                            backup_form=backup_form,
-                           restore_form=restore_form,
+                           # restore_form=restore_form, # Odstraněno
                            delete_form=delete_form,
                            backups=backups)
 
@@ -97,33 +97,7 @@ def backup_database():
 
     return redirect(url_for('settings.backup_settings'))
 
-@settings.route('/settings/backup/restore', methods=['POST'])
-@login_required
-@admin_required
-def restore_database():
-    """Obnovení databáze ze zálohy (pouze pro adminy)"""
-    form = RestoreDatabaseForm()
-
-    if form.validate_on_submit():
-        backup_filename = form.backup_file.data
-        backup_path = os.path.join('backups', backup_filename)
-
-        if not os.path.exists(backup_path):
-            flash(f'Soubor zálohy {backup_filename} neexistuje', 'danger')
-            return redirect(url_for('settings.backup_settings'))
-
-        try:
-            # Obnovení databáze ze zálohy
-            success = restore_db_backup(backup_path)
-
-            if success:
-                flash(f'Databáze byla úspěšně obnovena ze zálohy {backup_filename}', 'success')
-            else:
-                flash('Nepodařilo se obnovit databázi ze zálohy', 'danger')
-        except Exception as e:
-            flash(f'Chyba při obnovení databáze: {str(e)}', 'danger')
-
-    return redirect(url_for('settings.backup_settings'))
+# --- Funkce restore_database odstraněna ---
 
 @settings.route('/settings/backup/delete', methods=['POST'])
 @login_required

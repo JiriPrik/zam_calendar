@@ -21,21 +21,21 @@ Uživatel může stáhnout zálohu do svého počítače kliknutím na tlačítk
 
 ### Obnovení ze zálohy
 
-Aplikace umožňuje obnovit data ze zálohy. Při obnovení jsou všechna aktuální data nahrazena daty ze zálohy.
+Aplikace umožňuje obnovit data ze zálohy. Obnovení probíhá následujícím způsobem:
+- Uživatel vybere zálohu, ze které chce obnovit data.
+- uživatel zkopíruje soubor databáze zálohy do adresáře `instance` aplikace.
+- uživatel ukončí aplikaci
+- uživatel smaže původní soubor databáze "app.db" 
+- uživatel přejmenuje zálohu na "app.db"
+- uživatel spustí aplikaci.
 
-**Upozornění:** Obnovení ze zálohy je nevratná operace. Před obnovením je doporučeno vytvořit zálohu aktuálních dat.
-
-### Mazání záloh
-
-Nepotřebné zálohy lze smazat kliknutím na tlačítko "Smazat" u příslušné zálohy. Smazané zálohy jsou přesunuty do adresáře `backups/deleted` pro případnou obnovu.
 
 ## Technické detaily
 
 ### Struktura adresářů
 
 - `backups/` - adresář obsahující všechny zálohy
-  - `deleted/` - adresář obsahující smazané zálohy
-
+ 
 ### Implementace
 
 Zálohování je implementováno v následujících souborech:
@@ -47,8 +47,6 @@ Zálohování je implementováno v následujících souborech:
 ### Funkce pro zálohování
 
 - `backup_database()` - vytvoří zálohu databáze
-- `restore_database()` - obnoví databázi ze zálohy
-- `delete_backup_file()` - smaže zálohu (přesune ji do adresáře `deleted`)
 - `get_backups()` - získá seznam všech záloh
 
 ## Doporučení pro správu záloh
@@ -74,6 +72,5 @@ Zálohování je implementováno v následujících souborech:
 
 ### Nelze smazat zálohu
 
-1. Zkontrolujte, zda má aplikace práva pro zápis do adresáře `backups/deleted`.
-2. Zkontrolujte, zda je dostatek místa na disku.
-3. Zkontrolujte logy aplikace pro případné chybové zprávy.
+1. Zkontrolujte, zda je dostatek místa na disku.
+2. Zkontrolujte logy aplikace pro případné chybové zprávy.

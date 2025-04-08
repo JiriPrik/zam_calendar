@@ -25,12 +25,7 @@ class BackupDatabaseForm(FlaskForm):
     """Formulář pro zálohování databáze"""
     submit = SubmitField('Vytvořit zálohu')
 
-class RestoreDatabaseForm(FlaskForm):
-    """Formulář pro obnovení databáze ze zálohy"""
-    backup_file = HiddenField('Soubor zálohy', validators=[DataRequired()])
-    confirm = BooleanField('Potvrzuji, že chci obnovit databázi ze zálohy. Všechna aktuální data budou nahrazena.', validators=[DataRequired()])
-    submit = SubmitField('Obnovit databázi')
-
+# --- Formulář RestoreDatabaseForm odstraněn ---
 class DeleteBackupForm(FlaskForm):
     """Formulář pro smazání zálohy"""
     backup_file = HiddenField('Soubor zálohy', validators=[DataRequired()])
