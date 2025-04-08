@@ -16,6 +16,8 @@ Tato složka obsahuje kompletní dokumentaci k aplikaci pro registraci dovolený
 
 6. [Odkazy na použité technologie](06_odkazy_na_pouzite_technologie.md) - Seznam všech použitých technologií s odkazy.
 
+7. [Zálohování a obnova dat](07_zalohovani.md) - Popis systému zálohování a obnovy dat v aplikaci.
+
 ## Jak používat aplikaci
 
 ### Instalace a spuštění

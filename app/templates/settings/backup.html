@@ -34,7 +34,12 @@
         {% if backups %}
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Dostupné zálohy</h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Dostupné zálohy</h5>
+                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
+                        <i class="fas fa-exclamation-triangle me-1"></i> Smazat všechny zálohy
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -58,54 +63,11 @@
                                         <a href="{{ url_for('backup.download_backup', filename=backup.filename) }}" class="btn btn-sm btn-primary">
                                             <i class="fas fa-download me-1"></i>Stáhnout
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#restoreModal{{ loop.index }}">
-                                            <i class="fas fa-undo me-1"></i>Obnovit
-                                        </button>
-                                        <form method="POST" action="{{ url_for('backup.delete_backup') }}" style="display: inline;">
-                                            {{ delete_form.hidden_tag() }}
-                                            {{ delete_form.backup_file(value=backup.filename) }}
-                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-trash me-1"></i>Smazat
-                                            </button>
-                                        </form>
+                                        {# Odstraněno tlačítko Obnovit #}
+                                        {# Odstraněno tlačítko a formulář pro mazání jednotlivých záloh #}
                                     </div>
 
-                                    <!-- Modal pro obnovení -->
-                                    <div class="modal fade" id="restoreModal{{ loop.index }}" tabindex="-1" aria-labelledby="restoreModalLabel{{ loop.index }}" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-warning text-dark">
-                                                    <h5 class="modal-title" id="restoreModalLabel{{ loop.index }}">Obnovení databáze ze zálohy</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <div class="alert alert-danger">
-                                                        <h5><i class="fas fa-exclamation-triangle me-2"></i>Varování</h5>
-                                                        <p>Obnovení databáze ze zálohy přepíše všechna aktuální data. Tato akce je nevratná!</p>
-                                                    </div>
-
-                                                    <p><strong>Záloha:</strong> {{ backup.filename }}</p>
-                                                    <p><strong>Vytvořena:</strong> {{ backup.created_at_formatted }}</p>
-
-                                                    <form method="POST" action="{{ url_for('backup.restore_backup') }}">
-                                                        {{ restore_form.hidden_tag() }}
-                                                        {{ restore_form.backup_file(value=backup.filename) }}
-
-                                                        <div class="mb-3 form-check">
-                                                            {{ restore_form.confirm(class="form-check-input") }}
-                                                            {{ restore_form.confirm.label(class="form-check-label") }}
-                                                        </div>
-
-                                                        <div class="d-grid gap-2">
-                                                            {{ restore_form.submit(class="btn btn-warning") }}
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
+                                    {# Odstraněn Modal pro obnovení #}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -121,4 +83,76 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Modal pro smazání všech záloh -->
+<div class="modal fade" id="deleteAllModal" tabindex="-1" aria-labelledby="deleteAllModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAllModalLabel">Smazat všechny zálohy?</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Varování</h5>
+                    <p>Opravdu chcete smazat <strong>všechny</strong> existující zálohy? Tato akce je nevratná!</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zrušit</button>
+                <form method="POST" action="{{ url_for('backup.delete_all_backups') }}" style="display: inline;">
+                    {# Použijeme hidden_tag z existujícího formuláře pro CSRF token #}
+                    {{ delete_form.hidden_tag() }}
+                    <button type="submit" class="btn btn-danger">Ano, smazat všechny</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }} {# Zachová skripty z base.html, pokud existují #}
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        // Najdeme všechna modální okna pro obnovu
+        const restoreModals = document.querySelectorAll('.modal[id^="restoreModal"]');
+
+        restoreModals.forEach(modal => {
+            const form = modal.querySelector('form');
+            const submitButton = modal.querySelector('button[type="submit"], input[type="submit"]'); // Obecnější selektor
+            // Získáme název souboru z nějakého elementu uvnitř modalu, např. <p>
+            const backupFilenameElement = modal.querySelector('.modal-body p strong');
+            const backupFilename = backupFilenameElement ? backupFilenameElement.nextSibling.textContent.trim() : 'unknown'; // Získání textu za <strong>
+
+            if (form && submitButton) {
+                 // Logování kliknutí na tlačítko (může být užitečné pro debug)
+                 submitButton.addEventListener('click', function(e) {
+                     console.log(`Restore button clicked inside modal for backup: ${backupFilename}`);
+                 });
+                 // Logování odeslání formuláře
+                 form.addEventListener('submit', function(e) {
+                     console.log(`Restore form submitting for backup: ${backupFilename}`);
+                     const confirmCheckbox = form.querySelector('input[name="confirm"]');
+                     if (confirmCheckbox) {
+                         console.log('Confirm checkbox checked:', confirmCheckbox.checked);
+                     }
+                 });
+            } else {
+                console.error(`Could not find restore form or button inside modal: ${modal.id}`);
+            }
+        });
+
+        // Listener pro formulář smazání všech (pokud bychom ho chtěli logovat)
+        const deleteAllModal = document.getElementById('deleteAllModal');
+        if (deleteAllModal) {
+            const deleteAllForm = deleteAllModal.querySelector('form');
+            if(deleteAllForm) {
+                deleteAllForm.addEventListener('submit', function(e) {
+                    console.log('Delete All form submitting.');
+                });
+            }
+        }
+    });
+</script>
 {% endblock %}
